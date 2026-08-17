@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MSME Idea Hackathon 6.0 — Judging Rubric</title>
+<style>
+  :root{
+    --green:#0D3B26;
+    --green-light:#155c3c;
+    --gold:#C9A84C;
+    --cream:#F7F4EC;
+    --ink:#1c2420;
+    --muted:#6b756f;
+    --red:#b3372c;
+    --card:#ffffff;
+    --border:#e2ded2;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Arial, sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+    padding-bottom:60px;
+  }
+  header{
+    background:var(--green);
+    color:var(--cream);
+    padding:28px 20px 22px;
+    text-align:center;
+  }
+  header h1{
+    margin:0 0 6px;
+    font-size:1.4rem;
+    letter-spacing:.2px;
+  }
+  header p{
+    margin:0;
+    color:#cfe0d4;
+    font-size:.9rem;
+  }
+  .wrap{
+    max-width:820px;
+    margin:0 auto;
+    padding:20px 16px;
+  }
+  .card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:20px;
+    margin-bottom:18px;
+    box-shadow:0 1px 3px rgba(0,0,0,.04);
+  }
+  .card h2{
+    margin:0 0 4px;
+    font-size:1.05rem;
+    color:var(--green);
+  }
+  .card .sub{
+    color:var(--muted);
+    font-size:.85rem;
+    margin-bottom:14px;
+  }
+  label{
+    display:block;
+    font-weight:600;
+    font-size:.85rem;
+    margin:12px 0 5px;
+    color:var(--ink);
+  }
+  input[type=text], select, textarea{
+    width:100%;
+    padding:10px 12px;
+    border:1px solid var(--border);
+    border-radius:7px;
+    font-size:.95rem;
+    font-family:inherit;
+    background:#fdfcfa;
+  }
+  textarea{resize:vertical;min-height:60px;}
+  .dq-item{
+    display:flex;
+    gap:10px;
+    align-items:flex-start;
+    padding:8px 0;
+    border-bottom:1px dashed var(--border);
+    font-size:.88rem;
+  }
+  .dq-item:last-child{border-bottom:none;}
+  .dq-item input{margin-top:3px;flex-shrink:0;}
+  .criterion{
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:14px 16px;
+    margin-bottom:14px;
+    background:#fdfdfb;
+  }
+  .criterion .ctitle{
+    font-weight:700;
+    color:var(--green);
+    font-size:.98rem;
+  }
+  .criterion .weight{
+    float:right;
+    font-size:.75rem;
+    color:var(--gold);
+    background:#fbf5e6;
+    border:1px solid #eadfb7;
+    padding:2px 8px;
+    border-radius:20px;
+  }
+  .criterion .desc{
+    font-size:.83rem;
+    color:var(--muted);
+    margin:4px 0 10px;
+  }
+  .anchors{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:6px;
+    margin-bottom:10px;
+  }
+  .anchor{
+    display:flex;
+    gap:8px;
+    align-items:flex-start;
+    font-size:.8rem;
+    color:#3a423d;
+    background:#f4f2ea;
+    padding:6px 10px;
+    border-radius:6px;
+  }
+  .anchor b{color:var(--green);min-width:14px;}
+  .score-select{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .score-select label{
+    display:flex;
+    align-items:center;
+    gap:5px;
+    font-weight:500;
+    background:#fff;
+    border:1px solid var(--border);
+    padding:6px 12px;
+    border-radius:20px;
+    cursor:pointer;
+    margin:0;
+    font-size:.85rem;
+  }
+  .score-select input{margin:0;}
+  .score-select label:has(input:checked){
+    background:var(--green);
+    color:#fff;
+    border-color:var(--green);
+  }
+  .theme-fit{
+    display:flex;
+    gap:10px;
+  }
+  .theme-fit label{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-weight:500;
+    font-size:.88rem;
+  }
+  button{
+    background:var(--green);
+    color:#fff;
+    border:none;
+    padding:13px 22px;
+    border-radius:8px;
+    font-size:1rem;
+    font-weight:700;
+    cursor:pointer;
+    width:100%;
+  }
+  button:hover{background:var(--green-light);}
+  button:disabled{background:#9aa79f;cursor:not-allowed;}
+  #status{
+    text-align:center;
+    margin-top:12px;
+    font-size:.88rem;
+    min-height:20px;
+  }
+  .status-ok{color:var(--green);font-weight:600;}
+  .status-err{color:var(--red);font-weight:600;}
+  .total-box{
+    background:var(--green);
+    color:#fff;
+    border-radius:10px;
+    padding:16px 20px;
+    text-align:center;
+    margin-bottom:18px;
+  }
+  .total-box .num{
+    font-size:2rem;
+    font-weight:800;
+    color:var(--gold);
+  }
+  .total-box .verdict{
+    font-size:.9rem;
+    margin-top:4px;
+    opacity:.9;
+  }
+  .required:after{
+    content:" *";
+    color:var(--red);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>MSME Idea Hackathon 6.0</h1>
+  <p>Evaluator Scoring Rubric — records saved to Google Sheet on submit</p>
+</header>
+
+<div class="wrap">
+
+  <div class="card" id="setupCard">
+    <h2>Evaluator Setup</h2>
+    <div class="sub">Enter your name once. Host Institute is fixed for this session. You won't be asked for these again.</div>
+
+    <label class="required">Evaluator Name</label>
+    <input type="text" id="evaluatorName" placeholder="Your full name">
+
+    <label>Host Institute</label>
+    <input type="text" id="hiName" value="Sir MV School of Architecture" readonly style="background:#f0efe9;color:#555;">
+
+    <button style="margin-top:14px;" onclick="startSession()">Start Judging</button>
+    <div id="setupStatus" style="color:var(--red);font-size:.85rem;margin-top:8px;"></div>
+  </div>
+
+  <div id="evalSection" style="display:none;">
+
+  <div class="card">
+    <h2>Idea Details</h2>
+    <div class="sub">Judging as <b id="evaluatorDisplay"></b> · <span id="hiDisplay"></span></div>
+
+    <label class="required">Theme</label>
+    <select id="theme">
+      <option value="">Select theme</option>
+      <option>Renewable Energy</option>
+      <option>Energy Efficiency</option>
+      <option>Automotive Technology</option>
+      <option>Industry 4.0 and 5.0</option>
+      <option>Robotics and Automation</option>
+      <option>Other Frontier and Export-Oriented Technologies</option>
+    </select>
+
+    <label class="required">Idea Title / ID</label>
+    <input type="text" id="ideaName" placeholder="Idea title or reference ID as shown on MIS portal">
+  </div>
+
+  <div class="card">
+    <h2>Step 0 — Disqualification Checklist</h2>
+    <div class="sub">If ANY box is ticked, the idea must be rejected outright. Scoring below is skipped.</div>
+
+    <div class="dq-item"><input type="checkbox" class="dq" data-label="Contains personal/organisation info in Title, Block Diagram or Concept"><span>Idea Title, Block Diagram, or Concept contains personal/organisation info (name, company, address, phone, email, website, article references, etc.)</span></div>
+    <div class="dq-item"><input type="checkbox" class="dq" data-label="Idea already exists with no novelty"><span>Idea already exists in the market with no meaningful novelty</span></div>
+    <div class="dq-item"><input type="checkbox" class="dq" data-label="Plagiarism / infringement suspected"><span>Evidence of plagiarism / infringement / theft of another idea</span></div>
+    <div class="dq-item"><input type="checkbox" class="dq" data-label="Contradicts scientific principles"><span>Idea contradicts established scientific principles</span></div>
+    <div class="dq-item"><input type="checkbox" class="dq" data-label="Prototype already built by applicant"><span>Applicant has already built a working prototype of this exact idea</span></div>
+    <div class="dq-item"><input type="checkbox" class="dq" data-label="Applicant and Mentor appear to be the same person"><span>Applicant and Mentor appear to be the same person (if disclosed to you)</span></div>
+  </div>
+
+  <div class="card">
+    <h2>Step 1 — Theme Fit</h2>
+    <div class="sub">Does the idea genuinely belong to the theme it's submitted under?</div>
+    <div class="theme-fit">
+      <label><input type="radio" name="themeFit" value="Good Fit" checked> Good Fit</label>
+      <label><input type="radio" name="themeFit" value="Weak Fit / Flag for Reclassification"> Weak Fit / Flag for Reclassification</label>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Step 2 — Scoring Rubric</h2>
+    <div class="sub">Score every criterion 1–5. Read the anchor descriptions before choosing — they define what each score means for this criterion specifically.</div>
+
+    <div id="criteria"></div>
+  </div>
+
+  <div class="total-box">
+    <div>Weighted Total Score</div>
+    <div class="num" id="totalScore">—</div>
+    <div class="verdict" id="verdictText">Complete scoring above</div>
+  </div>
+
+  <div class="card">
+    <h2>Step 3 — Notes for MoM</h2>
+    <label>Key Strength</label>
+    <textarea id="strength" placeholder="One or two lines on the idea's strongest point"></textarea>
+    <label>Key Concern</label>
+    <textarea id="concern" placeholder="One or two lines on the main risk or gap"></textarea>
+    <label>Innovation Type (optional tags — select all that apply)</label>
+    <div class="dq-item" style="border:none;padding-top:2px;flex-wrap:wrap;">
+      <div style="display:flex;flex-wrap:wrap;gap:8px;width:100%;">
+        <label style="width:auto;font-weight:500;font-size:.85rem;background:#fff;border:1px solid var(--border);padding:6px 12px;border-radius:20px;display:flex;align-items:center;gap:6px;margin:0;"><input type="checkbox" class="innovtype" value="Marketing & Branding" style="margin:0;">Marketing & Branding</label>
+        <label style="width:auto;font-weight:500;font-size:.85rem;background:#fff;border:1px solid var(--border);padding:6px 12px;border-radius:20px;display:flex;align-items:center;gap:6px;margin:0;"><input type="checkbox" class="innovtype" value="Ideation" style="margin:0;">Ideation</label>
+        <label style="width:auto;font-weight:500;font-size:.85rem;background:#fff;border:1px solid var(--border);padding:6px 12px;border-radius:20px;display:flex;align-items:center;gap:6px;margin:0;"><input type="checkbox" class="innovtype" value="Technology" style="margin:0;">Technology</label>
+        <label style="width:auto;font-weight:500;font-size:.85rem;background:#fff;border:1px solid var(--border);padding:6px 12px;border-radius:20px;display:flex;align-items:center;gap:6px;margin:0;"><input type="checkbox" class="innovtype" value="Co-creation" style="margin:0;">Co-creation</label>
+        <label style="width:auto;font-weight:500;font-size:.85rem;background:#fff;border:1px solid var(--border);padding:6px 12px;border-radius:20px;display:flex;align-items:center;gap:6px;margin:0;"><input type="checkbox" class="innovtype" value="Social Innovation" style="margin:0;">Social Innovation</label>
+        <label style="width:auto;font-weight:500;font-size:.85rem;background:#fff;border:1px solid var(--border);padding:6px 12px;border-radius:20px;display:flex;align-items:center;gap:6px;margin:0;"><input type="checkbox" class="innovtype" value="Entrepreneurship" style="margin:0;">Entrepreneurship</label>
+        <label style="width:auto;font-weight:500;font-size:.85rem;background:#fff;border:1px solid var(--border);padding:6px 12px;border-radius:20px;display:flex;align-items:center;gap:6px;margin:0;"><input type="checkbox" class="innovtype" value="Open Innovation" style="margin:0;">Open Innovation</label>
+        <label style="width:auto;font-weight:500;font-size:.85rem;background:#fff;border:1px solid var(--border);padding:6px 12px;border-radius:20px;display:flex;align-items:center;gap:6px;margin:0;"><input type="checkbox" class="innovtype" value="Business Model Innovation" style="margin:0;">Business Model Innovation</label>
+      </div>
+    </div>
+  </div>
+
+  <button id="submitBtn" onclick="submitEvaluation()">Submit Evaluation</button>
+  <div id="status"></div>
+
+  </div><!-- /evalSection -->
+
+</div>
+
+<script>
+// ============ CONFIGURATION ============
+// Paste your Google Apps Script Web App URL here after deployment (see instructions provided separately).
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwbciYosIJLruDvUsOrkFTN0pcSwcHMqRt0vSRPWlm2s5KuFIdREqw9yF_sa0dZoBsryA/exec";
+// ========================================
+
+const CRITERIA = [
+  {
+    id: "novelty",
+    title: "1. Novelty & Innovative Value",
+    weight: 20,
+    desc: "Is this genuinely new, or a meaningful improvement on existing approaches?",
+    anchors: [
+      "1 — Copy of an existing, widely available solution. No differentiation.",
+      "2 — Minor cosmetic variation on an existing solution.",
+      "3 — Some original elements, but core approach is largely conventional.",
+      "4 — Clearly differentiated approach or combination of ideas not commonly seen.",
+      "5 — Genuinely novel concept or a fresh, non-obvious combination with strong originality."
+    ]
+  },
+  {
+    id: "problemfit",
+    title: "2. Problem–Solution Fit / Usefulness",
+    weight: 20,
+    desc: "Does it solve a real, meaningful MSME or societal problem, with a clear value proposition?",
+    anchors: [
+      "1 — Problem is unclear, trivial, or not actually a problem for the stated audience.",
+      "2 — Problem is real but solution barely addresses it, or value prop is muddled.",
+      "3 — Problem and solution are reasonably matched but value proposition is generic.",
+      "4 — Clear, credible problem with a solution that directly and convincingly addresses it.",
+      "5 — Sharp articulation of a significant problem with a compelling, well-matched solution."
+    ]
+  },
+  {
+    id: "viability",
+    title: "3. Technical & Commercial Viability",
+    weight: 20,
+    desc: "Can this realistically be built, and is there a plausible path to market or revenue?",
+    anchors: [
+      "1 — Not buildable with realistic resources; no credible path to market.",
+      "2 — Major technical or commercial red flags with no mitigation shown.",
+      "3 — Feasible in principle but with significant open technical/commercial questions.",
+      "4 — Reasonably buildable with a believable, if early, commercial path.",
+      "5 — Strong technical grounding and a clear, credible route to commercialisation."
+    ]
+  },
+  {
+    id: "impact",
+    title: "4. Impact Potential",
+    weight: 15,
+    desc: "Cost reduction, quality-of-life improvement, energy/raw-material/labour savings, import substitution, export potential, or clean-energy/climate benefit — whichever applies to this idea.",
+    anchors: [
+      "1 — No discernible impact beyond the applicant themselves.",
+      "2 — Marginal, narrow, or unsubstantiated impact claims.",
+      "3 — Plausible, moderate impact on a limited group or use case.",
+      "4 — Meaningful impact on a reasonably sized population/sector, reasonably substantiated.",
+      "5 — High, well-substantiated impact — significant savings, reach, or strategic benefit (e.g., import substitution, export potential, major efficiency gain)."
+    ]
+  },
+  {
+    id: "scalability",
+    title: "5. Scalability & Resource Availability",
+    weight: 15,
+    desc: "Are the inputs, resources, and skills needed reasonably accessible? Can it scale beyond a pilot?",
+    anchors: [
+      "1 — Depends on resources/skills that are scarce, exotic, or unrealistic to source.",
+      "2 — Significant resourcing challenges with no plan to address them.",
+      "3 — Resources are available but scaling path is vague.",
+      "4 — Resources are accessible and a reasonable scaling logic is evident.",
+      "5 — Readily available resources with a clear, credible path from pilot to scale."
+    ]
+  },
+  {
+    id: "clarity",
+    title: "6. Clarity of Idea & IP Awareness",
+    weight: 10,
+    desc: "Is the concept clearly and logically explained? Any indication of IP thinking, even informal?",
+    anchors: [
+      "1 — Concept is confusing, contradictory, or impossible to follow.",
+      "2 — Explanation is patchy; key mechanics are unclear.",
+      "3 — Understandable with effort; some gaps in logic or detail.",
+      "4 — Clearly explained with logical flow; IP angle briefly considered.",
+      "5 — Crisp, well-structured explanation; clear awareness of IP/differentiation angle."
+    ]
+  }
+];
+
+let SESSION_EVALUATOR = "";
+let SESSION_HI = "Sir MV School of Architecture";
+
+function startSession(){
+  const name = document.getElementById("evaluatorName").value.trim();
+  const setupStatus = document.getElementById("setupStatus");
+  if(!name){
+    setupStatus.textContent = "Please enter your name to start.";
+    return;
+  }
+  SESSION_EVALUATOR = name;
+  document.getElementById("evaluatorDisplay").textContent = SESSION_EVALUATOR;
+  document.getElementById("hiDisplay").textContent = SESSION_HI;
+  document.getElementById("setupCard").style.display = "none";
+  document.getElementById("evalSection").style.display = "block";
+}
+
+const container = document.getElementById("criteria");
+CRITERIA.forEach(c => {
+  const div = document.createElement("div");
+  div.className = "criterion";
+  div.innerHTML = `
+    <div class="weight">${c.weight}%</div>
+    <div class="ctitle">${c.title}</div>
+    <div class="desc">${c.desc}</div>
+    <div class="anchors">
+      ${c.anchors.map(a => {
+        const [num, ...rest] = a.split(" — ");
+        return `<div class="anchor"><b>${num}</b><span>${rest.join(" — ")}</span></div>`;
+      }).join("")}
+    </div>
+    <div class="score-select">
+      ${[1,2,3,4,5].map(n => `
+        <label><input type="radio" name="score_${c.id}" value="${n}" onchange="updateTotal()"> ${n}</label>
+      `).join("")}
+    </div>
+  `;
+  container.appendChild(div);
+});
+
+function updateTotal(){
+  let total = 0;
+  let answered = 0;
+  CRITERIA.forEach(c => {
+    const sel = document.querySelector(`input[name="score_${c.id}"]:checked`);
+    if(sel){
+      answered++;
+      total += (parseInt(sel.value) * c.weight / 100);
+    }
+  });
+  const totalEl = document.getElementById("totalScore");
+  const verdictEl = document.getElementById("verdictText");
+  if(answered === 0){
+    totalEl.textContent = "—";
+    verdictEl.textContent = "Complete scoring above";
+    return;
+  }
+  totalEl.textContent = total.toFixed(2) + " / 5";
+  if(answered < CRITERIA.length){
+    verdictEl.textContent = `${answered}/${CRITERIA.length} criteria scored so far`;
+  } else if(total >= 3.5){
+    verdictEl.textContent = "Recommend";
+  } else if(total >= 3.0){
+    verdictEl.textContent = "Borderline — discuss in EC";
+  } else {
+    verdictEl.textContent = "Do not recommend";
+  }
+}
+
+function resetIdeaForm(){
+  document.getElementById("theme").value = "";
+  document.getElementById("ideaName").value = "";
+  document.querySelectorAll(".dq").forEach(el => el.checked = false);
+  document.querySelector('input[name="themeFit"][value="Good Fit"]').checked = true;
+  CRITERIA.forEach(c => {
+    const checked = document.querySelector(`input[name="score_${c.id}"]:checked`);
+    if(checked) checked.checked = false;
+  });
+  document.getElementById("strength").value = "";
+  document.getElementById("concern").value = "";
+  document.querySelectorAll(".innovtype").forEach(el => el.checked = false);
+  updateTotal();
+  window.scrollTo({top: document.getElementById("evalSection").offsetTop - 20, behavior: "smooth"});
+}
+
+async function submitEvaluation(){
+  const statusEl = document.getElementById("status");
+  const btn = document.getElementById("submitBtn");
+  statusEl.textContent = "";
+  statusEl.className = "";
+
+  const evaluatorName = SESSION_EVALUATOR;
+  const hiName = SESSION_HI;
+  const theme = document.getElementById("theme").value;
+  const ideaName = document.getElementById("ideaName").value.trim();
+
+  if(!theme || !ideaName){
+    statusEl.textContent = "Please fill Theme and Idea Title before submitting.";
+    statusEl.className = "status-err";
+    return;
+  }
+
+  const dqChecked = Array.from(document.querySelectorAll(".dq:checked")).map(el => el.dataset.label);
+  const isDisqualified = dqChecked.length > 0;
+
+  const themeFit = document.querySelector('input[name="themeFit"]:checked').value;
+
+  const scores = {};
+  let missing = false;
+  if(!isDisqualified){
+    CRITERIA.forEach(c => {
+      const sel = document.querySelector(`input[name="score_${c.id}"]:checked`);
+      if(!sel){ missing = true; }
+      scores[c.title] = sel ? sel.value : "";
+    });
+    if(missing){
+      statusEl.textContent = "Please score all 6 criteria (or tick a disqualification box if rejecting).";
+      statusEl.className = "status-err";
+      return;
+    }
+  }
+
+  const totalScore = document.getElementById("totalScore").textContent;
+  const verdict = document.getElementById("verdictText").textContent;
+  const strength = document.getElementById("strength").value.trim();
+  const concern = document.getElementById("concern").value.trim();
+  const innovType = Array.from(document.querySelectorAll(".innovtype:checked")).map(el => el.value).join("; ");
+
+  const payload = {
+    timestamp: new Date().toISOString(),
+    evaluatorName,
+    hiName,
+    theme,
+    ideaName,
+    disqualified: isDisqualified ? "YES" : "NO",
+    disqualificationReasons: dqChecked.join("; "),
+    themeFit,
+    scores,
+    totalScore: isDisqualified ? "N/A" : totalScore,
+    verdict: isDisqualified ? "Not Recommended (Disqualified)" : verdict,
+    strength,
+    concern,
+    innovationType: innovType
+  };
+
+  if(SCRIPT_URL.indexOf("PASTE_YOUR") === 0){
+    statusEl.textContent = "Setup needed: paste your Google Apps Script URL into the SCRIPT_URL variable in this file.";
+    statusEl.className = "status-err";
+    return;
+  }
+
+  btn.disabled = true;
+  statusEl.textContent = "Submitting...";
+  statusEl.className = "";
+
+  try{
+    await fetch(SCRIPT_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: {"Content-Type": "text/plain;charset=utf-8"},
+      body: JSON.stringify(payload)
+    });
+    statusEl.textContent = "✓ Evaluation submitted and saved successfully. Ready for next idea.";
+    statusEl.className = "status-ok";
+    btn.disabled = false;
+    resetIdeaForm();
+  }catch(err){
+    statusEl.textContent = "Error submitting. Check your internet connection and try again.";
+    statusEl.className = "status-err";
+    btn.disabled = false;
+  }
+}
+</script>
+
+</body>
+</html>

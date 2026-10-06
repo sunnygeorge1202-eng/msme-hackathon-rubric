@@ -1,0 +1,758 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question Quality Review</title>
+<style>
+:root{
+  --bg:#f6f5f2; --card:#ffffff; --ink:#1b1b19; --ink2:#55534e; --muted:#8a8780; --line:#e3e1db;
+  --accent:#2a78d6; --accent-ink:#ffffff; --accent-soft:#e6f0fc;
+  --good:#1d7f3a; --good-soft:#e5f4e9; --warn:#a86a00; --warn-soft:#fdf0d8; --bad:#b3302f; --bad-soft:#fbe7e6;
+  --s1:#2a78d6; --s2:#eb6834; --surface:#fcfcfb; --grid:#ecebe7;
+  --r:14px;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#141413; --card:#1d1d1b; --ink:#f2f1ec; --ink2:#c3c2b7; --muted:#8d8b82; --line:#34332f;
+    --accent:#3987e5; --accent-soft:#1b2a3d; --good:#52c26f; --good-soft:#15291b; --warn:#e0a53a; --warn-soft:#2e2412;
+    --bad:#ec7776; --bad-soft:#331a1a; --s1:#3987e5; --s2:#d95926; --surface:#1a1a19; --grid:#2b2a27;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:780px;margin:0 auto;padding:0 16px 120px}
+header.top{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--line)}
+.top-in{max-width:780px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:12px}
+.bar{flex:1;height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .25s}
+.top-meta{font-size:13px;color:var(--ink2);white-space:nowrap}
+.saved{font-size:12px;color:var(--muted);min-width:64px;text-align:right}
+.saved.err{color:var(--bad)}
+.iconbtn{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:99px;width:32px;height:32px;font-weight:700;cursor:pointer}
+h1{font-size:26px;line-height:1.2;margin:24px 0 8px}
+h2{font-size:20px;margin:20px 0 6px}
+h3{font-size:16px;margin:0 0 2px}
+p{margin:8px 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px;margin:14px 0}
+.muted{color:var(--ink2)}
+.small{font-size:13px}
+.pill{display:inline-block;font-size:12px;font-weight:600;padding:3px 10px;border-radius:99px;background:var(--accent-soft);color:var(--accent);margin-right:6px}
+.pill.alt{background:var(--line);color:var(--ink2)}
+.qtext{font-size:19px;line-height:1.45;font-weight:600;margin:10px 0 12px}
+.opt{display:flex;gap:10px;padding:9px 12px;border:1px solid var(--line);border-radius:10px;margin:6px 0;align-items:flex-start}
+.opt b{min-width:22px}
+.opt.key{border-color:var(--good);background:var(--good-soft)}
+.opt .tag{margin-left:auto;font-size:12px;font-weight:700;color:var(--good);white-space:nowrap}
+.guide{border-left:4px solid var(--accent);background:var(--accent-soft);padding:10px 14px;border-radius:0 10px 10px 0;margin:8px 0}
+.guide h4{margin:0 0 4px;font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink2)}
+.guide ul{margin:4px 0 0 18px;padding:0}
+.crit{margin:18px 0 6px}
+.crit .q{color:var(--ink2);font-size:14px;margin:0 0 8px}
+.btns{display:grid;gap:8px}
+.btns.c4{grid-template-columns:repeat(4,1fr)}
+.btns.c5{grid-template-columns:repeat(5,1fr)}
+.btns.c3{grid-template-columns:repeat(3,1fr)}
+.btns.c6{grid-template-columns:repeat(3,1fr)}
+.btns.c2{grid-template-columns:repeat(2,1fr)}
+@media (max-width:560px){.btns.c4{grid-template-columns:repeat(2,1fr)}.btns.c5{grid-template-columns:repeat(2,1fr)}.btns.c3{grid-template-columns:1fr}}
+.b{border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:10px 8px;min-height:56px;text-align:center;cursor:pointer;font:inherit;line-height:1.25}
+.b strong{display:block;font-size:15px}
+.b span{display:block;font-size:12px;color:var(--ink2);margin-top:2px}
+.b:hover{border-color:var(--accent)}
+.b.on{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 1px var(--accent) inset}
+.b.on strong{color:var(--accent)}
+.b.v-asis.on{border-color:var(--good);background:var(--good-soft);box-shadow:0 0 0 1px var(--good) inset}.b.v-asis.on strong{color:var(--good)}
+.b.v-minor.on{border-color:var(--warn);background:var(--warn-soft);box-shadow:0 0 0 1px var(--warn) inset}.b.v-minor.on strong{color:var(--warn)}
+.b.v-major.on,.b.v-reject.on{border-color:var(--bad);background:var(--bad-soft);box-shadow:0 0 0 1px var(--bad) inset}.b.v-major.on strong,.b.v-reject.on strong{color:var(--bad)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.chip{border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:99px;padding:7px 14px;font:inherit;font-size:14px;cursor:pointer}
+.chip.on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:600}
+label.f{display:block;font-weight:600;margin:16px 0 6px}
+input[type=text],input[type=password],input[type=number],textarea,select{width:100%;font:inherit;color:var(--ink);background:var(--card);border:1.5px solid var(--line);border-radius:10px;padding:11px 12px}
+textarea{min-height:76px;resize:vertical}
+.nav{position:fixed;left:0;right:0;bottom:0;background:var(--bg);border-top:1px solid var(--line);z-index:20}
+.nav-in{max-width:780px;margin:0 auto;padding:10px 16px;display:flex;gap:10px}
+.btn{border:0;border-radius:12px;padding:13px 20px;font:inherit;font-weight:700;cursor:pointer;background:var(--accent);color:var(--accent-ink);flex:1;min-height:48px}
+.btn.sec{background:var(--card);color:var(--ink);border:1.5px solid var(--line);flex:0 0 auto}
+.btn[disabled]{opacity:.4;cursor:not-allowed}
+.btn.ready{animation:pulse 1.4s ease 1}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(42,120,214,.5)}100%{box-shadow:0 0 0 14px rgba(42,120,214,0)}}
+.hint{font-size:13px;color:var(--muted);text-align:center;margin:6px 0 0}
+.banner{background:var(--warn-soft);color:var(--warn);border-radius:10px;padding:8px 12px;font-size:13px;margin:10px 0}
+.modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:50;display:flex;align-items:flex-end;justify-content:center}
+.modal>div{background:var(--card);max-width:780px;width:100%;max-height:88vh;overflow:auto;border-radius:18px 18px 0 0;padding:18px 18px 28px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.03em;color:var(--ink2)}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+.scroll{overflow-x:auto}
+/* admin */
+.wide{max-width:1040px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}
+.kpi .v{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums}
+.kpi .l{font-size:12px;color:var(--ink2)}
+.verdict{border-radius:var(--r);padding:18px;margin:14px 0;border:1px solid var(--line);background:var(--card)}
+.verdict.win{border-left:6px solid var(--good)}.verdict.none{border-left:6px solid var(--warn)}
+.legend{display:flex;gap:16px;font-size:13px;margin:6px 0}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+svg text{fill:var(--ink2);font:12px system-ui,sans-serif}
+.sig{font-weight:700;color:var(--good)}
+.nonsig{color:var(--muted)}
+details{margin:8px 0}summary{cursor:pointer;font-weight:600}
+@media print{.nav,header.top{display:none}}
+</style>
+</head>
+<body>
+<header class="top" id="top" hidden><div class="top-in">
+  <div class="top-meta" id="topMeta"></div><div class="bar"><i id="barFill" style="width:0"></i></div>
+  <div class="saved" id="saved"></div><button class="iconbtn" id="helpBtn" title="Rating guide" aria-label="Rating guide">?</button>
+</div></header>
+<main class="wrap" id="app"></main>
+<div class="nav" id="nav" hidden><div class="nav-in"><button class="btn sec" id="backBtn">Back</button><button class="btn" id="nextBtn">Next</button></div></div>
+<div id="modalHost"></div>
+<script>
+/* ============ CONFIG ============ */
+var APPS_SCRIPT_URL = "";   // <-- paste your deployed Apps Script web app URL here (ends with /exec)
+var QDATA = {"topics": {"reflection": {"name": "Reflection of Light by Plane Surfaces", "sets": {"RX41": [{"id": "RX41-01", "n": 1, "level": 1, "levelName": "Remember", "kind": "obj", "stem": "What happens when light falls on a surface?", "options": ["Light changes colour", "Light stops moving", "Light becomes dark", "Reflection occurs"], "key": "D"}, {"id": "RX41-02", "n": 2, "level": 2, "levelName": "Understand", "kind": "obj", "stem": "A pinhole camera produces a clear image of a candle flame. The hole is now made bigger. Why does the image become blurred?", "options": ["The candle flame becomes dimmer", "Rays from different parts of the flame reach different points on the screen", "Light stops travelling in straight lines", "Less light enters the bigger hole"], "key": "B"}, {"id": "RX41-03", "n": 3, "level": 3, "levelName": "Apply", "kind": "obj", "stem": "Ravi wants to see what is happening behind him while standing in a shop. Which device should he use?", "options": ["A periscope", "A solar cooker", "A cycle spoke", "A pinhole camera"], "key": "A"}, {"id": "RX41-04", "n": 4, "level": 4, "levelName": "Analyse", "kind": "sub", "stem": "A jewellery shop uses two plane mirrors placed at an angle. A barber shop also uses two plane mirrors. Both shops get multiple images of the same object. What is the advantage of getting multiple images in each shop? Compare the two situations.", "guide": "A strong response identifies that in a jewellery shop, multiple images let a customer see different sides or views of jewellery items at the same time. In a barber shop, multiple images let the customer see the back and sides of their head. The advantage in both is seeing views that are otherwise hidden. The connection between the two situations is that both use reflection to show angles or sides that cannot be seen directly.", "criteria": null, "wc": "40-70 words"}, {"id": "RX41-05", "n": 5, "level": 5, "levelName": "Evaluate", "kind": "sub", "stem": "Suma says: 'A solar cooker should use curved mirrors, not plane mirrors, because curved mirrors focus light better.' Do you agree with Suma's statement? Justify your answer based on what plane mirrors can do.", "guide": "A strong response disagrees with Suma or qualifies her claim, justifying that plane mirrors can reflect sunlight effectively and are used in solar cookers as stated in the taught examples. Plane mirrors redirect light rays in a predictable way because the angle of reflection equals the angle of incidence. While curved mirrors may focus light to a point, plane mirrors can still collect and direct enough sunlight to heat food. The justification should reference the actual use of plane mirrors in solar cookers and the principle of reflection that makes them useful.", "criteria": null, "wc": "50-90 words"}, {"id": "RX41-06", "n": 6, "level": 6, "levelName": "Create", "kind": "sub", "stem": "Design an activity to show your classmates that the incident ray, reflected ray, and normal all lie in the same plane. List the materials you will use and the steps you will follow. Your activity should produce a result that can be clearly observed.", "guide": null, "criteria": ["Names at least two materials needed (e.g. mirror strip, pins, cardboard, paper)", "Describes placing a mirror on a surface", "Describes how to create an incident ray (e.g. using pins or drawing a line)", "Describes how to identify the reflected ray", "Describes a method to check that all three (incident ray, reflected ray, normal) are in one flat surface or plane", "States what the classmates will observe if all three lie in the same plane"], "wc": "70-120 words"}, {"id": "RX41-07", "n": 7, "level": 1, "levelName": "Remember", "kind": "obj", "stem": "What is the reflecting layer in a plane mirror made of?", "options": ["Plastic or rubber", "Wood or paper", "Iron or copper", "Silver or aluminium"], "key": "D"}, {"id": "RX41-08", "n": 8, "level": 2, "levelName": "Understand", "kind": "obj", "stem": "Why does a plane mirror form a virtual image?", "options": ["Because light travels in straight lines", "Because the object is placed in front of the mirror", "Because the mirror is made of glass", "Because the reflected rays appear to come from a point behind the mirror"], "key": "D"}, {"id": "RX41-09", "n": 9, "level": 3, "levelName": "Apply", "kind": "obj", "stem": "A barber wants to show a customer the back of his head. What should the barber do using a plane mirror?", "options": ["Place the mirror on the ceiling above the customer", "Hold the mirror directly in front of the customer's face", "Hold a mirror behind the customer so the customer can see the reflection in the front mirror", "Place the mirror on the floor below the customer"], "key": "C"}, {"id": "RX41-10", "n": 10, "level": 4, "levelName": "Analyse", "kind": "sub", "stem": "Ravi stands 2 m in front of a plane mirror. His friend Suresh stands 3 m in front of the same mirror. Both see their images in the mirror. Compare the distances of their images from the mirror. What explains the difference?", "guide": "A strong response identifies that Ravi's image appears 2 m behind the mirror and Suresh's image appears 3 m behind the mirror. It connects this to the property that the image distance equals the object distance. The explanation should note that because Suresh stands farther from the mirror than Ravi, his image also appears farther behind it.", "criteria": null, "wc": "40-70 words"}, {"id": "RX41-11", "n": 11, "level": 5, "levelName": "Evaluate", "kind": "sub", "stem": "A shopkeeper says that plane mirrors are better than photographs for showing jewellery to customers. Do you agree with this claim? Justify your answer using the properties of plane mirror images.", "guide": "A strong response takes a clear position (agree or disagree) and justifies it using plane mirror properties. An agreement might note that the mirror shows the same size image, allows viewing from different angles, and shows multiple views when more mirrors are used. A disagreement might argue that photographs can be kept permanently or shared, while mirror images disappear when the object is removed. The justification must reference at least one relevant property of plane mirror images.", "criteria": null, "wc": "50-90 words"}, {"id": "RX41-12", "n": 12, "level": 6, "levelName": "Create", "kind": "sub", "stem": "Design a simple experiment using two plane mirrors to show that you can see an object that is not directly in front of you. Describe what materials you will use, how you will arrange them, and what you will observe.", "guide": null, "criteria": ["Names two plane mirrors as materials", "Names at least one object to be viewed", "Describes an arrangement where the two mirrors are positioned so light reflects from one to the other", "Describes an observation showing that the object can be seen even though it is not in direct line of sight", "The arrangement is physically possible and would actually work"], "wc": "70-120 words"}, {"id": "RX41-13", "n": 13, "level": 1, "levelName": "Remember", "kind": "obj", "stem": "What is the effect called when the right side of an object appears as the left side in a plane mirror?", "options": ["Lateral inversion", "Image formation", "Mirror reversal", "Reflection"], "key": "A"}, {"id": "RX41-14", "n": 14, "level": 2, "levelName": "Understand", "kind": "obj", "stem": "A girl stands 2 m away from a plane mirror. Her image is also 2 m from the mirror. Why does her image sometimes look smaller when she moves farther back?", "options": ["The light rays become weaker at greater distances", "The image subtends a smaller angle at her eye when she is farther away", "The image moves closer to the mirror when she moves back", "The mirror produces a smaller image when the object moves back"], "key": "B"}, {"id": "RX41-15", "n": 15, "level": 3, "levelName": "Apply", "kind": "obj", "stem": "A shopkeeper wants customers to see items from different sides without moving around the shop. Which use of plane mirrors would help?", "options": ["Place mirrors on walls to produce multiple images of the items", "Use one large mirror at the shop entrance", "Use mirrors to reflect sunlight into the shop", "Place mirrors only behind the counter"], "key": "A"}, {"id": "RX41-16", "n": 16, "level": 4, "levelName": "Analyse", "kind": "sub", "stem": "When you look at the word 'AMBULANCE' written on the front of an ambulance in your rear-view mirror, you can read it normally. But when you look at other words in the mirror, they appear reversed. What is the relationship between how the word is written on the ambulance and what you see in the mirror? Explain your reasoning.", "guide": "A strong response identifies that the word 'AMBULANCE' is already written in reverse (laterally inverted) on the ambulance itself. When this reversed word undergoes lateral inversion again in the mirror, it appears normal to read. The response connects two facts: (1) lateral inversion happens in plane mirrors, and (2) the word must have been written backwards originally to appear correct after inversion.", "criteria": null, "wc": "40-70 words"}, {"id": "RX41-17", "n": 17, "level": 5, "levelName": "Evaluate", "kind": "sub", "stem": "A student says: 'A periscope is better than just looking around a corner because it keeps you hidden.' Do you agree with this claim? Use your knowledge of how periscopes work to justify your answer.", "guide": "A strong response makes a judgment (agree or disagree) and justifies it against the criterion of staying hidden. Agreement might note that the periscope uses plane mirrors to reflect light from above or around obstacles, so the observer's eye stays below or behind cover. The response should explain that only the small mirror end is exposed, not the person's head or body, which supports the claim. The judgment must be defended using how periscopes function.", "criteria": null, "wc": "50-90 words"}, {"id": "RX41-18", "n": 18, "level": 6, "levelName": "Create", "kind": "sub", "stem": "Design a simple method using one plane mirror to help a person see if the back of their shirt has a stain on it without taking the shirt off. Describe what materials you would use, where you would place them, and how the person would use your method.", "guide": null, "criteria": ["Names at least two mirrors or one mirror plus one reflective surface (e.g. bathroom mirror and handheld mirror)", "Describes placing one mirror behind the person so it reflects the back of the shirt", "Explains that the person looks at a second mirror (or reflective surface) in front to see the reflection from the back mirror", "Describes positioning or angle adjustments needed to see the back clearly"], "wc": "70-120 words"}], "RK27": [{"id": "RK27-01", "n": 1, "level": 1, "levelName": "Remember", "kind": "obj", "stem": "In the laws of reflection, the angle of reflection is equal to which angle?", "options": ["Angle of deviation", "Angle of the mirror", "Angle of elevation", "Angle of incidence"], "key": "D"}, {"id": "RK27-02", "n": 2, "level": 2, "levelName": "Understand", "kind": "obj", "stem": "A ray of light hits a plane mirror. The angle between the light ray and the normal is 30 degrees. What is the angle of reflection?", "options": ["0 degrees", "30 degrees", "90 degrees", "60 degrees"], "key": "B"}, {"id": "RK27-03", "n": 3, "level": 3, "levelName": "Apply", "kind": "obj", "stem": "Suresh is using a pinhole camera to see a tree outside. He makes the pinhole bigger. What happens to the image of the tree on the screen?", "options": ["It becomes upside down and smaller", "It becomes blurred", "It disappears completely", "It becomes clearer and brighter"], "key": "B"}, {"id": "RK27-04", "n": 4, "level": 4, "levelName": "Analyse", "kind": "sub", "stem": "In a pinhole camera, the image is clear when the hole is very small. But if the hole is too small, the image becomes very dark. Explain why a very small hole makes the image dark, even though it keeps the image sharp.", "guide": "The student should connect two ideas: 1) Light travels in straight lines, so a small hole ensures only one ray from each point of the object reaches the screen (sharpness). 2) A smaller hole allows less light to pass through, so fewer light rays reach the screen, making the image darker.", "criteria": null, "wc": "40-70 words"}, {"id": "RK27-05", "n": 5, "level": 5, "levelName": "Evaluate", "kind": "sub", "stem": "A student says, 'We should always make the pinhole as small as possible to get the best image.' Do you agree? Justify your answer using the idea of light passing through the hole.", "guide": "The student should disagree or qualify the statement. They must justify that while a small hole makes the image sharp, if it is too small, the image becomes too dark to see clearly. A balance is needed for a good image.", "criteria": null, "wc": "50-90 words"}, {"id": "RK27-06", "n": 6, "level": 6, "levelName": "Create", "kind": "sub", "stem": "Design a simple experiment using a cardboard box, a pin, and a candle to show that light travels in a straight line. List the materials you need and the steps you will follow. State what you expect to see.", "guide": null, "criteria": ["Lists cardboard box, pin, and candle as materials.", "Describes making a pinhole in one end of the box.", "Describes placing the candle in front of the pinhole.", "States that a spot of light appears on the opposite inner wall of the box.", "Explains that this shows light traveled in a straight line from the candle to the screen."], "wc": "70-120 words"}, {"id": "RK27-07", "n": 7, "level": 1, "levelName": "Remember", "kind": "obj", "stem": "What is the outer layer made of in a standard plane mirror?", "options": ["A layer of wood", "A layer of paper", "A layer of plastic", "A layer of silver or aluminium on glass"], "key": "D"}, {"id": "RK27-08", "n": 8, "level": 2, "levelName": "Understand", "kind": "obj", "stem": "Why can a person see their image in a plane mirror?", "options": ["The image is painted on the back of the mirror", "The mirror produces its own light to show the image", "The light from the person bounces off the mirror to their eyes", "The eye sends light out to look for the image"], "key": "C"}, {"id": "RK27-09", "n": 9, "level": 3, "levelName": "Apply", "kind": "obj", "stem": "A child stands 2 meters in front of a plane mirror. What is the distance between the child and the image of the child?", "options": ["6 meters", "4 meters", "0 meters", "2 meters"], "key": "B"}, {"id": "RK27-10", "n": 10, "level": 4, "levelName": "Analyse", "kind": "sub", "stem": "Ramesh writes the word 'JAW' on a paper and holds it up to a plane mirror. He sees the image of the letters. Explain why the first letter he sees in the mirror appears as 'W' and the last letter as 'J'.", "guide": "A strong response should identify that plane mirrors cause lateral inversion. It must connect the concept of left-right reversal to the specific observation that the rightmost part of the object ('W') appears on the left side of the image, and the leftmost part ('J') appears on the right side. It should explain that the mirror flips the image side-to-side.", "criteria": null, "wc": "40-70 words"}, {"id": "RK27-11", "n": 11, "level": 5, "levelName": "Evaluate", "kind": "sub", "stem": "A shop owner decides to use a large plane mirror on the back wall of their small shop to make the space look bigger. Is this a good idea? Justify your answer based on the properties of images formed by plane mirrors.", "guide": "A strong response should agree that it is a good idea. The justification must link the property of 'virtual image formed behind the mirror' and 'image appears at same distance as object' to the visual effect. It should explain that the mirror creates an illusion of depth, making the room appear twice as long or larger, which benefits the shop owner. The criterion for judging is the utility of the mirror for enlarging space visually.", "criteria": null, "wc": "50-90 words"}, {"id": "RK27-12", "n": 12, "level": 6, "levelName": "Create", "kind": "sub", "stem": "Design a simple method using a plane mirror, a flashlight, and a dark wall to show that the angle of reflection is equal to the angle of incidence. Describe the setup and how you would measure the angles.", "guide": null, "criteria": ["Names the three key components: plane mirror, flashlight (light source), and a surface (wall or screen) to see the reflected ray.", "Describes placing the mirror on a surface (like a table or floor) so the light hits it.", "Mentions marking or measuring the angle at which the light hits the mirror (incident ray) relative to the normal.", "Mentions marking or measuring the angle at which the light bounces off (reflected ray) relative to the normal.", "States that the two measured angles should be equal to demonstrate the law."], "wc": "70-120 words"}, {"id": "RK27-13", "n": 13, "level": 1, "levelName": "Remember", "kind": "obj", "stem": "Where does the image of an object form when it is placed in front of a plane mirror?", "options": ["Half the distance behind the mirror.", "Twice the distance behind the mirror.", "Directly on the glass surface of the mirror.", "Same distance behind the mirror as the object is in front of it."], "key": "D"}, {"id": "RK27-14", "n": 14, "level": 2, "levelName": "Understand", "kind": "obj", "stem": "Why does a shop owner use plane mirrors on the walls of a small shop?", "options": ["To make the items look colorful.", "To stop people from stealing the items.", "To keep the shop cooler in summer.", "To make the shop look bigger and to see more items from one spot."], "key": "D"}, {"id": "RK27-15", "n": 15, "level": 3, "levelName": "Apply", "kind": "obj", "stem": "A student uses a periscope to look over a wall. Which parts of the periscope make this possible?", "options": ["One convex lens and one flat glass sheet.", "Two plane mirrors placed at angles to each other.", "A speaker and a small electric motor.", "A strong magnifying glass and a dark tube."], "key": "B"}, {"id": "RK27-16", "n": 16, "level": 4, "levelName": "Analyse", "kind": "sub", "stem": "Ram looks at his face in a large plane mirror from a distance of 2 meters. Then he walks closer to the mirror and stands 1 meter away. The size of his image in the mirror seems to change. Compare the actual size of the image at both positions. Explain what Ram sees and why it happens.", "guide": "The actual size of the image remains the same at both positions because a plane mirror forms an image of the same size as the object. Ram sees the image as larger when he is closer because the angle subtended at his eye is larger, making it appear bigger. The change is in apparent size, not actual size.", "criteria": null, "wc": "40-70 words"}, {"id": "RK27-17", "n": 17, "level": 5, "levelName": "Evaluate", "kind": "sub", "stem": "A bakery owner wants to see around the corner of her counter to check if customers are waiting, but she cannot look back because she is working. Her neighbor suggests using a camera instead of a plane mirror setup. Do you think the plane mirror setup is better for this quick check? Justify your answer.", "guide": "Yes, the plane mirror setup is better. It provides an immediate, real-time view without any delay or setup time. A camera might require recording, playing back, or looking at a screen, which is slower for a quick check. The mirror reflects light instantly, which is efficient for monitoring a short distance in a shop.", "criteria": null, "wc": "50-90 words"}, {"id": "RK27-18", "n": 18, "level": 6, "levelName": "Create", "kind": "sub", "stem": "Design a simple setup using two small plane mirrors and a sturdy cardboard tube that allows a student to see over a low bench without bending down. Describe how to place the mirrors and explain how light travels from the object over the bench to the student's eyes.", "guide": "The student creates a periscope. One mirror is placed at the top of the tube, angled at 45 degrees. The other is at the bottom, also at 45 degrees and facing the first one. Light from the object travels down the tube, reflects off both mirrors, and enters the eye.", "criteria": ["Describes placing two plane mirrors at 45-degree angles inside the tube.", "Explains that light reflects from the top mirror to the bottom mirror and into the eyes.", "Explains how the setup allows viewing over an obstacle."], "wc": "70-120 words"}]}}, "biodiversity": {"name": "Biodiversity and Conservation", "sets": {"BM63": [{"id": "BM63-01", "n": 1, "level": 1, "levelName": "Remember", "kind": "obj", "stem": "What is the name of the book that records endangered and threatened plants and animals?", "options": ["Species Protection Book", "Green Data Book", "Red Data Book", "Wildlife Record Book"], "key": "C"}, {"id": "BM63-02", "n": 2, "level": 2, "levelName": "Understand", "kind": "obj", "stem": "Why do changes in habitats reduce biodiversity?", "options": ["Habitat changes make all organisms move to cities and towns.", "Every organism has a role in nature, so habitat changes can harm organisms and reduce the variety of living things.", "Changed habitats have too much water for organisms to survive.", "Organisms in changed habitats become extinct immediately without any warning."], "key": "B"}, {"id": "BM63-03", "n": 3, "level": 3, "levelName": "Apply", "kind": "obj", "stem": "A farmer in Adilabad notices that bees are visiting his mango trees less often this year. He used a new strong pesticide on nearby crops. What should he do to help the mango trees produce fruit?", "options": ["Water the mango trees more often so they produce fruit without bees.", "Use more pesticide to kill all insects near the mango trees.", "Cut down the mango trees and plant new ones in a different place.", "Stop using the strong pesticide so that bees can come back and pollinate the mango flowers."], "key": "D"}, {"id": "BM63-04", "n": 4, "level": 4, "levelName": "Analyse", "kind": "sub", "stem": "Water hyacinth spreads very fast in lakes and ponds. At the same time, many fish in those water bodies start dying. What is the relationship between the spread of water hyacinth and the death of fish? Explain your answer.", "guide": "A strong response identifies that water hyacinth is an invasive alien species that spreads in natural habitats and threatens biodiversity. It connects two facts: (1) water hyacinth covers the water surface, blocking sunlight or using up oxygen, and (2) fish need oxygen and plants in water need sunlight to survive, so when water hyacinth spreads, the conditions that fish and water plants depend on are destroyed, causing fish to die. The connection between invasive spread and habitat disruption leading to organism death should be clear.", "criteria": null, "wc": "40-70 words"}, {"id": "BM63-05", "n": 5, "level": 5, "levelName": "Evaluate", "kind": "sub", "stem": "Some people say that Project Tiger is a waste of money because it protects only tigers. Do you agree with this statement? Justify your answer using what you know about biodiversity and food webs.", "guide": "A strong response takes a clear position (agree or disagree) and justifies it against the criterion of whether protecting one species benefits biodiversity. A defensible answer would disagree, arguing that Project Tiger protects not just tigers but the entire food web including deer and other organisms that tigers depend on, plus the forest habitat itself, so it protects biodiversity as a whole, not just one animal. The justification should reference the taught example showing tigers are part of a wider ecosystem and that protecting them means protecting many species and their habitats.", "criteria": null, "wc": "50-90 words"}, {"id": "BM63-06", "n": 6, "level": 6, "levelName": "Create", "kind": "sub", "stem": "Your school wants to help protect biodiversity in your local area. Design a project that students can do to reduce harm to pollinators like bees and butterflies. Your project should include what students will do, what materials they will need, and how the project will help pollinators.", "guide": null, "criteria": ["Names a specific action students will take (for example: planting flowers, reducing pesticide use, creating awareness, building bee habitats).", "Lists at least two materials or resources needed for the project.", "Explains clearly how the action will help bees and butterflies survive or increase in number.", "The project is realistic for school students to carry out."], "wc": "70-120 words"}, {"id": "BM63-07", "n": 7, "level": 1, "levelName": "Remember", "kind": "obj", "stem": "What did the Ramagundam forest lose after industries and buildings were made there?", "options": ["The forest got more animals because of new water sources", "Only the plant types changed but animals stayed the same", "The forest size increased because of human care", "Tigers, foxes and deer disappeared from that area"], "key": "D"}, {"id": "BM63-08", "n": 8, "level": 2, "levelName": "Understand", "kind": "obj", "stem": "Paper can be recycled several times. What does this mean for cutting trees?", "options": ["We need to cut fewer trees if we recycle paper", "We need to cut more trees because recycled paper needs fresh wood", "Recycling paper has no effect on how many trees are cut", "Recycled paper can only be used once and then trees must be cut again"], "key": "A"}, {"id": "BM63-09", "n": 9, "level": 3, "levelName": "Apply", "kind": "obj", "stem": "A school in Adilabad uses 500 notebooks every month. The notebooks are thrown away after use. What should the school do to help reduce tree cutting?", "options": ["Burn the old notebooks to make space for storing new ones", "Keep using new notebooks because recycling is not possible for paper", "Collect the used notebooks and send them for recycling into new paper products", "Buy more notebooks so students do not waste pages"], "key": "C"}, {"id": "BM63-10", "n": 10, "level": 4, "levelName": "Analyse", "kind": "sub", "stem": "Siberian cranes come to India during winter to find food. Pakhal Sanctuary allows some human activity but Jim Corbett National Park does not allow people to live inside. Both places protect migratory birds. Compare these two types of protected areas. Which one is better for birds that need undisturbed wetlands for nesting? Give reasons for your answer.", "guide": "A strong response identifies that Jim Corbett type parks (no human activity inside) provide more undisturbed space for nesting compared to sanctuaries like Pakhal where limited human activity happens. The answer connects the need for undisturbed wetlands (stated in the question) with the difference in protection rules between the two types, explaining that less disturbance means safer nesting sites for migratory birds.", "criteria": null, "wc": "40-70 words"}, {"id": "BM63-11", "n": 11, "level": 5, "levelName": "Evaluate", "kind": "sub", "stem": "A company wants to build a factory near Pakhal Sanctuary. The company says it will bring jobs to local people. But scientists say the factory will pollute the water that migratory birds need. The government must decide whether to allow the factory or not. Do you agree that the government should allow the factory? Justify your answer using what you know about biodiversity conservation.", "guide": "A strong response takes a clear position (agree or disagree) and justifies it using biodiversity conservation principles. If disagreeing: explains that pollution will destroy wetland habitat needed by migratory birds, and that protecting biodiversity is more important than short-term jobs because once species disappear they cannot return, referencing how habitat destruction caused problems in Ramagundam. If agreeing: must acknowledge the conservation cost and argue why jobs are more critical in this specific case, though this position is weaker given the conservation focus of the topic. The key is a defended judgement with conservation reasoning, not just opinion.", "criteria": null, "wc": "50-90 words"}, {"id": "BM63-12", "n": 12, "level": 6, "levelName": "Create", "kind": "sub", "stem": "Your school principal wants to start a paper-saving project to help reduce deforestation. Design a plan for your school that will reduce paper waste and reuse paper products. Your plan should include at least three different actions students and teachers can take. Explain how each action will help save trees.", "guide": null, "criteria": ["Names at least three different actions to reduce or reuse paper", "Each action is practical and possible to do in a school setting", "Explains how each action connects to saving trees or reducing deforestation", "The plan is original and not just copied from the examples in the lesson"], "wc": "70-120 words"}, {"id": "BM63-13", "n": 13, "level": 1, "levelName": "Remember", "kind": "obj", "stem": "What does conservation mean?", "options": ["Building homes for wild animals in zoos", "Protecting plants, animals and their habitats from extinction", "Cutting down old forests to plant new trees", "Growing more plants in cities and towns"], "key": "B"}, {"id": "BM63-14", "n": 14, "level": 2, "levelName": "Understand", "kind": "obj", "stem": "Why does protecting tigers also help other animals in the forest?", "options": ["Because tigers bring water from rivers to dry areas", "Because tigers teach other animals how to hunt for food", "Because tigers build homes that other animals can use later", "Because tigers are part of food webs that connect to many other organisms"], "key": "D"}, {"id": "BM63-15", "n": 15, "level": 3, "levelName": "Apply", "kind": "obj", "stem": "A forest near your town has many birds that eat insects from crop fields. Farmers want to use strong insecticides on their crops. What should be done to conserve the birds?", "options": ["Stop all farming activities near the forest", "Build a sanctuary only for insects in the area", "Use natural resources carefully and reduce the amount of insecticides used", "Move all the birds to a national park far away"], "key": "C"}, {"id": "BM63-16", "n": 16, "level": 4, "levelName": "Analyse", "kind": "sub", "stem": "Tigers disappeared from Ramagundam forest after it was destroyed for industry. Western Ghats plants are found only in that region. Compare these two situations. What is one important difference in the conservation problem they show?", "guide": "A strong response identifies that tigers can move or be brought back to other forests if their habitat is restored, while Western Ghats plants are endemic and cannot be found anywhere else, so destroying their habitat means losing them forever. The response should connect the idea of habitat loss in both cases but recognize the difference between species that exist in multiple locations versus endemic species restricted to one place.", "criteria": null, "wc": "40-70 words"}, {"id": "BM63-17", "n": 17, "level": 5, "levelName": "Evaluate", "kind": "sub", "stem": "Some people say that sanctuaries are better for conservation than national parks because people can still use some resources there. Do you agree with this statement? Justify your answer using what you know about protecting wildlife.", "guide": "A strong response takes a clear position (agree or disagree) and justifies it against conservation goals. A disagreement might argue that no human activity (national parks) protects wildlife better because any human use can disturb habitats or harm species. An agreement might argue that sanctuaries balance conservation with human needs, making protection more acceptable to local people. The key is that the learner must judge which approach better serves the criterion of protecting species and habitats, and defend that judgement with reasoning.", "criteria": null, "wc": "50-90 words"}, {"id": "BM63-18", "n": 18, "level": 6, "levelName": "Create", "kind": "sub", "stem": "Your school wants to help conserve biodiversity in your local area. Design a plan that students can follow to reduce waste and protect plants and animals near the school. Your plan should use at least two different actions students can take.", "guide": null, "criteria": ["Names at least two different conservation actions students can take", "Each action connects clearly to either reducing waste or protecting local plants and animals", "Explains how students will carry out each action in simple steps", "The plan uses ideas appropriate for a school setting"], "wc": "70-120 words"}], "BQ18": [{"id": "BQ18-01", "n": 1, "level": 1, "levelName": "Remember", "kind": "obj", "stem": "What do we call a living thing that disappears completely from Earth and can never come back?", "options": ["Endangered", "Extinct", "Migratory", "Invasive"], "key": "B"}, {"id": "BQ18-02", "n": 2, "level": 2, "levelName": "Understand", "kind": "obj", "stem": "In the context of protecting wildlife, what is the main purpose of keeping a Red Data Book?", "options": ["To keep a list of animals and plants that are in danger of disappearing.", "To give new names to all the animals that have migrated.", "To record the number of trees planted by local school groups.", "To sell tickets for entry into forest parks and sanctuaries."], "key": "A"}, {"id": "BQ18-03", "n": 3, "level": 3, "levelName": "Apply", "kind": "obj", "stem": "A farmer in Telangana finds that wild honey bees are no longer coming to pollinate his pepper and brinjal crops because of heavy pesticide use. Using what you know about the role of bees in an ecosystem, what is the most direct problem for his farm next season?", "options": ["The crops will produce very few or no fruits and seeds.", "The amount of rain falling on his land will increase.", "The crops will grow faster because the bugs are dead.", "New, different species of plants will grow on his land."], "key": "A"}, {"id": "BQ18-04", "n": 4, "level": 4, "levelName": "Analyse", "kind": "sub", "stem": "Two species of birds, the Palapitta and the Siberian Crane, are affected by different environmental changes. The Palapitta (Indian Roller) found in Adilabad is dying off because of heavy insecticide use and less wild food, while the Siberian Crane migrates to India each year because of winter snow in its home region. Compare the effects that insecticides and changing weather have on how a species survives in a specific location. How do these two threats behave differently?", "guide": "The student must note two different pressures: 1) Insecticide use directly kills local birds and destroys the local food web, showing a human-made threat reducing local breeding success and survival over years. 2) Snowy winter weather in Siberia forces cranes to move and find new space; it is a seasonal travel necessity (migration) rather than an immediate death sentence for the species at the home location, though it still alters their habitat. The student should link the death due to local loss (Palapitta) versus moving away due to seasonal change (Crane).", "criteria": null, "wc": "40-70 words"}, {"id": "BQ18-05", "n": 5, "level": 5, "levelName": "Evaluate", "kind": "sub", "stem": "Think about a village set near the forest. Many villagers want to chop down forest trees to make room for new houses and factories, while a few people want to leave the forest completely untouched to keep animals safe. Which plan do you think is better for protecting the long-term biodiversity in that area? You must justify your answer by comparing how the needs of animals and the needs of humans interact when forests are cut down or protected.", "guide": "The response should make a clear, justified value judgment. A strong response evaluates trade-offs. For example, supporting full protection might emphasize total ecosystem balance and preventing species from dying forever, whereas supporting smart development might focus on building limits or leaving specific conservation areas/trees and balancing livelihood needs while safeguarding habitats from destroying insects and protecting natural corridors where birds and insects remain living.", "criteria": null, "wc": "50-90 words"}, {"id": "BQ18-06", "n": 6, "level": 6, "levelName": "Create", "kind": "sub", "stem": "It is reported that fewer and fewer honey bees are living around the fields near you due to a huge water tank and plastic waste. We want honey bee numbers to grow back up so that local flowering crops produce full harvests again. Design a one-paragraph action plan that states at least two specific steps the local community and local farmers could do together to bring more bees to the local area. Ensure you are changing their daily routine, and don't just mention making new tanks, nor simply buy honey.", "guide": null, "criteria": ["States at least two distinct actions taken by community/farmer groups linked directly to reducing the stated crisis (tank/pollution/waste).", "Any proposed steps genuinely increase chances of bee return to crops instead of creating generic environmental phrases (e.g., planting flowering native bushes, avoiding pesticide spraying during flowering times, eliminating plastic litter around fields).", "Connects the specific action to helping flowers get pollinated as requested.", "Describes an original multi-part plan that cannot be directly copied from standard textbook definitions."], "wc": "70-120 words"}, {"id": "BQ18-07", "n": 7, "level": 1, "levelName": "Remember", "kind": "obj", "stem": "What is the name of the plant that is an invasive alien species and grows in water bodies?", "options": ["Spanish flag plant", "Siberian crane", "Palapitta", "Water hyacinth"], "key": "D"}, {"id": "BQ18-08", "n": 8, "level": 2, "levelName": "Understand", "kind": "obj", "stem": "Why did tigers and deer disappear from the Ramagundam forest area?", "options": ["Because the forest was cleared for a power station and other human activities.", "Because the local people hunted them for sport.", "Because the weather became too hot for them to survive.", "Because they migrated to other forests to find more food."], "key": "A"}, {"id": "BQ18-09", "n": 9, "level": 3, "levelName": "Apply", "kind": "obj", "stem": "A farmer in a town near the Western Ghats sees a new type of plant growing in his field. This plant was not there before and is spreading fast. What is the best way to describe this plant?", "options": ["A protected species", "An endemic species", "An invasive alien species", "A native species"], "key": "C"}, {"id": "BQ18-10", "n": 10, "level": 4, "levelName": "Analyse", "kind": "sub", "stem": "In the Ramagundam forest, trees were cut down for building a power station. At the same time, the number of tigers and deer went down. Explain the connection between cutting down trees and the decrease in tigers and deer.", "guide": "The student should explain that tigers and deer need the forest for food and shelter. When trees are cut, their habitat is destroyed. Without food and shelter, they cannot survive and leave or die.", "criteria": null, "wc": "40-70 words"}, {"id": "BQ18-11", "n": 11, "level": 5, "levelName": "Evaluate", "kind": "sub", "stem": "Some people say that building a thermal power station in a forest is good because it gives electricity to the town. Others say it is bad because it destroys the home of wild animals. Which side do you agree with? Give two reasons to support your answer.", "guide": "The student should choose one side and provide two valid reasons. For example, agreeing with the 'bad' side: 1) It destroys the habitat of animals like tigers. 2) It reduces biodiversity in the area. Or agreeing with the 'good' side: 1) It provides electricity for daily needs. 2) It helps in the development of the town. The key is to justify the choice.", "criteria": null, "wc": "50-90 words"}, {"id": "BQ18-12", "n": 12, "level": 6, "levelName": "Create", "kind": "sub", "stem": "Design a simple plan to stop water hyacinth from spreading in a local pond in your town. Your plan must include one action that people can do and one rule that the town should follow.", "guide": null, "criteria": ["Names a specific action people can take (e.g., cleaning the pond, not throwing waste).", "States a clear rule for the town (e.g., banning the use of the pond for washing clothes, creating a signboard).", "The plan is practical and realistic for a Class 8 student to understand and explain."], "wc": "70-120 words"}, {"id": "BQ18-13", "n": 13, "level": 1, "levelName": "Remember", "kind": "obj", "stem": "What is the main goal of conservation?", "options": ["Creating new habitats for animals", "Allowing people to use all forest resources", "Making paper from trees", "Protecting plants and animals from extinction"], "key": "D"}, {"id": "BQ18-14", "n": 14, "level": 2, "levelName": "Understand", "kind": "obj", "stem": "Which statement best describes the difference between a National Park and a Wildlife Sanctuary?", "options": ["National Parks allow more human activity than Sanctuaries.", "National Parks do not allow human activity, but Sanctuaries allow limited human activity.", "Both National Parks and Sanctuaries ban all human entry.", "Sanctuaries are only for trees, while National Parks are only for animals."], "key": "B"}, {"id": "BQ18-15", "n": 15, "level": 3, "levelName": "Apply", "kind": "obj", "stem": "A school wants to save trees. Which action is the best example of conserving forest resources?", "options": ["Recycling old newspapers to make new file covers.", "Buying new wooden desks for the classroom.", "Burning paper waste in the open ground.", "Cutting trees to build a new playground."], "key": "A"}, {"id": "BQ18-16", "n": 16, "level": 4, "levelName": "Analyse", "kind": "sub", "stem": "In Ramagundam, industrial development destroyed parts of the forest. This area lost tigers and other wildlife. At the same time,Project Tiger in other areas protects tigers and their food web. Based on this, explain the relationship between forest destruction and the loss of tigers.", "guide": "The student should state that tigers need a large habitat to find prey (like deer). When the forest is destroyed, their home and food source disappear. This leads to the decline or disappearance of tigers in that area. It connects the loss of habitat with the loss of the predator.", "criteria": null, "wc": "40-70 words"}, {"id": "BQ18-17", "n": 17, "level": 5, "levelName": "Evaluate", "kind": "sub", "stem": "A village proposal suggests using sawdust and wood pieces to make compressed cardboard for furniture instead of cutting whole trees. Do you think this plan will help in biodiversity conservation? Justify your answer.", "guide": "The student should agree that it helps. They must justify it by explaining that using waste wood reduces the need to cut healthy trees. This protects the forest habitat and the plants/animals living there. It shows judicious use of resources.", "criteria": null, "wc": "50-90 words"}, {"id": "BQ18-18", "n": 18, "level": 6, "levelName": "Create", "kind": "sub", "stem": "Design a simple 3-step plan for a school drive to conserve paper. Your plan must include one action to reduce waste, one action to reuse materials, and one action to recycle. Explain how each step saves trees.", "guide": null, "criteria": ["Includes a specific action to reduce paper waste (e.g., printing on both sides).", "Includes a specific action to reuse materials (e.g., using one side of old notebooks as scrap paper).", "Includes a specific action to recycle (e.g., collecting old newspapers for recycling units).", "Briefly explains that saving paper means fewer trees need to be cut."], "wc": "70-120 words"}]}}}};
+/* ================================ */
+var PREVIEW = !APPS_SCRIPT_URL;
+var $ = function(s){return document.querySelector(s)};
+var esc = function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})};
+
+/* ---------- seeded randomness ---------- */
+function cyrb53(str,seed){seed=seed||0;var h1=0xdeadbeef^seed,h2=0x41c6ce57^seed;for(var i=0,ch;i<str.length;i++){ch=str.charCodeAt(i);h1=Math.imul(h1^ch,2654435761);h2=Math.imul(h2^ch,1597334677)}
+ h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);return 4294967296*(2097151&h2)+(h1>>>0)}
+function rng(seedStr){var a=cyrb53(seedStr)>>>0;return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function shuffle(arr,r){var a=arr.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(r()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
+
+/* ---------- rubric definitions ---------- */
+var SCALE4=[{v:4,l:'Excellent'},{v:3,l:'Good'},{v:2,l:'Needs work'},{v:1,l:'Poor'}];
+var CRITS=[
+ {k:'acc',t:'Scientific accuracy',q:function(kind){return kind==='obj'?'Is the question correct, and is the marked answer really the right one?':'Is the question correct, and is the expected response guide scientifically right?'},
+  d:{4:'Fully correct',3:'Tiny wording slip',2:'Debatable or partly wrong',1:'Wrong, or wrong key'}},
+ {k:'lang',t:'Language and clarity',q:function(){return 'Would your students read and understand it without your help?'},
+  d:{4:'Clear and simple',3:'A few hard words',2:'Confusing for many',1:'Most would not follow'}},
+ {k:'diff',t:'Difficulty for your class',q:function(){return 'For an average student in your class, how hard is this?'},five:true},
+ {k:'constr',t:'Question construction',q:function(kind){return kind==='obj'?'One defensible answer, believable wrong options, no giveaway clues?':'Is the task clear, and is the guide good enough to mark answers fairly?'},
+  d:{4:'Well built',3:'Minor flaw',2:'Several flaws',1:'Unusable'}},
+ {k:'syll',t:'Syllabus fit (SCERT Class 8)',q:function(){return 'Is this within the Class 8 chapter your students have studied?'},
+  d:{4:'Directly in chapter',3:'In scope, beyond textbook wording',2:'Only loosely related',1:'Outside syllabus'}},
+ {k:'ctx',t:'Familiar context',q:function(){return 'Are the examples and names familiar to students in rural or semi-urban Telangana?'},
+  d:{4:'Very familiar',3:'Neutral',2:'Somewhat unfamiliar',1:'Alien or foreign'}}
+];
+var DIFF5=[{v:1,l:'Too easy'},{v:2,l:'A bit easy'},{v:3,l:'Just right'},{v:4,l:'A bit hard'},{v:5,l:'Too hard'}];
+var BLOOM=[{v:1,l:'Remember',d:'Recall a fact'},{v:2,l:'Understand',d:'Explain in own words'},{v:3,l:'Apply',d:'Use in a new situation'},
+           {v:4,l:'Analyse',d:'Compare, find reasons'},{v:5,l:'Evaluate',d:'Judge and justify'},{v:6,l:'Create',d:'Design or plan something'}];
+var VERDICTS=[{v:'asis',l:'Use as it is',c:'v-asis'},{v:'minor',l:'Minor edit',c:'v-minor'},{v:'major',l:'Major rewrite',c:'v-major'},{v:'reject',l:'Reject',c:'v-reject'}];
+var ISSUES=['Wrong answer or key','Language too difficult','Outside syllabus','Unfamiliar context','Too easy','Too hard','Ambiguous wording','Weak wrong options','Marking guide unclear','Too long'];
+var SETCRITS=[
+ {k:'coverage',t:'Topic coverage',q:'Do the 18 questions cover the important parts of the chapter?'},
+ {k:'diffSpread',t:'Mix of easy, medium and hard',q:'Is there a sensible spread of difficulty?'},
+ {k:'variety',t:'Variety of question types',q:'Is there a good variety of types and thinking levels?'},
+ {k:'length',t:'Length and time',q:'Is the amount of work reasonable for your students in class?'},
+ {k:'suitability',t:'Overall suitability for my students',q:'Taken as a whole, is this set right for students in your school?'}
+];
+var WOULDUSE=[{v:'yes',l:'Yes, as it is'},{v:'edits',l:'Yes, with edits'},{v:'no',l:'No'}];
+var PREFREASONS=['Clearer language','More accurate','Better for my students','Better difficulty','Better variety','More familiar examples','Better marking guides'];
+var AREAS=['Village / rural','Small town (Tier 3)','City (Tier 2)','Metro (Tier 1)'];
+var SCHOOLS=['Government','Aided','Private'];
+var EXPS=['0-5 years','6-10 years','11-20 years','20+ years'];
+var COMFORT=['Very comfortable','Moderately comfortable','Limited'];
+var LSKEY='qeval_v1_';
+
+/* ---------- state ---------- */
+var S=null, step=0, steps=[], saveTimer=null;
+function store(k,v){try{if(v===undefined)return JSON.parse(localStorage.getItem(k));localStorage.setItem(k,JSON.stringify(v))}catch(e){return null}}
+function nameNorm(n){return String(n).toLowerCase().replace(/[^a-z0-9 ]/g,'').replace(/\s+/g,' ').trim()}
+function mkTid(name,pin){return 'T'+cyrb53(nameNorm(name)+'|'+pin).toString(36)}
+function allQs(){var m={};for(var t in QDATA.topics)for(var c in QDATA.topics[t].sets)QDATA.topics[t].sets[c].forEach(function(q){m[q.id]=q;q.set=c;q.topic=t});return m}
+var QBYID=allQs();
+
+function qorderFor(tid,code){return shuffle(QDATA.topics[topicOfCode(code)].sets[code].map(function(q){return q.id}),rng(tid+'|'+code))}
+function buildPlan(tid,base){ // base = {topicOrder,pos} from the server (counterbalanced); otherwise a seeded random fallback
+  var plan;
+  if(base&&planValid(base)){plan={topicOrder:base.topicOrder.slice(),pos:JSON.parse(JSON.stringify(base.pos))}}
+  else{
+    var r=rng(tid+'|plan');plan={topicOrder:shuffle(Object.keys(QDATA.topics),r),pos:{}};
+    plan.topicOrder.forEach(function(t){var codes=shuffle(Object.keys(QDATA.topics[t].sets),r);plan.pos[t]={A:codes[0],B:codes[1]}});
+  }
+  plan.qorder={};
+  plan.topicOrder.forEach(function(t){['A','B'].forEach(function(p){var c=plan.pos[t][p];plan.qorder[c]=qorderFor(tid,c)})});
+  return plan;
+}
+function planValid(p){
+  try{var ts=Object.keys(QDATA.topics);if(!p||!p.topicOrder||p.topicOrder.length!==ts.length)return false;
+    return p.topicOrder.every(function(t){var x=p.pos&&p.pos[t];return QDATA.topics[t]&&x&&QDATA.topics[t].sets[x.A]&&QDATA.topics[t].sets[x.B]&&x.A!==x.B})}catch(e){return false}
+}
+function buildSteps(){
+  steps=[];
+  S.plan.topicOrder.forEach(function(t,ti){
+    ['A','B'].forEach(function(p){
+      var code=S.plan.pos[t][p];
+      steps.push({type:'intro',topic:t,pos:p,code:code,ti:ti});
+      S.plan.qorder[code].forEach(function(id,i){steps.push({type:'q',topic:t,pos:p,code:code,qid:id,i:i})});
+    });
+    steps.push({type:'set',topic:t,pos:'A',code:S.plan.pos[t].A});
+    steps.push({type:'set',topic:t,pos:'B',code:S.plan.pos[t].B});
+    steps.push({type:'pref',topic:t});
+  });
+  steps.push({type:'done'});
+}
+function qDone(r){return r&&r.acc&&r.lang&&r.diff&&r.constr&&r.syll&&r.ctx&&r.perceived&&r.verdict}
+function setDone(r){return r&&SETCRITS.every(function(c){return r[c.k]})&&r.wouldUse}
+function stepDone(s){
+  if(s.type==='intro')return true;
+  if(s.type==='q')return qDone(S.resp[s.qid]);
+  if(s.type==='set')return setDone(S.setR[s.code]);
+  if(s.type==='pref')return !!(S.pref[s.topic]&&S.pref[s.topic].pos);
+  return false;
+}
+function persist(){store(LSKEY+S.tid,S);store(LSKEY+'last',{tid:S.tid,name:S.profile.name});setSaved(PREVIEW?'Saved on this device':'Saved on this device')}
+function setSaved(t,err){var e=$('#saved');if(e){e.textContent=t;e.className='saved'+(err?' err':'')}}
+
+/* ---------- server ---------- */
+function withTimeout(p,ms){return new Promise(function(res,rej){var t=setTimeout(function(){rej(new Error('timeout'))},ms);p.then(function(v){clearTimeout(t);res(v)},function(e){clearTimeout(t);rej(e)})})}
+function api(payload){
+  if(PREVIEW)return Promise.resolve({ok:true,preview:true});
+  return withTimeout(fetch(APPS_SCRIPT_URL,{method:'POST',body:JSON.stringify(payload),keepalive:true}).then(function(r){return r.json()}),25000);
+}
+function apiGet(q){return withTimeout(fetch(APPS_SCRIPT_URL+'?'+q).then(function(r){return r.json()}),25000)}
+function topicOfCode(c){return Object.keys(QDATA.topics).filter(function(t){return QDATA.topics[t].sets[c]})[0]}
+function bumpSecs(){
+  var s=steps[step];if(!s||s.type!=='q'||!S)return;var r=S.resp[s.qid];var now=Date.now();
+  if(r){r.secs=(r.secs||0)+Math.min(300,(now-qT0)/1000)}qT0=now;
+}
+var qT0=Date.now(),lastRendered=-1,pushing=false,pushAgain=false;
+function respPayload(qid){
+  var q=QBYID[qid],r=S.resp[qid],st=null;
+  for(var i=0;i<steps.length;i++)if(steps[i].qid===qid){st=steps[i];break}
+  return {qid:qid,qn:q.n,kind:q.kind,setCode:q.set,claimedLevel:q.level,displayPos:st.pos,qOrder:st.i+1,
+    acc:r.acc,lang:r.lang,diffRating:r.diff,constr:r.constr,syll:r.syll,ctx:r.ctx,perceived:r.perceived,verdict:r.verdict,
+    secs:Math.round(r.secs||0),issues:r.issues||[],comment:(r.comment||'').slice(0,1000)};
+}
+function anyDirty(){var d=S&&S.dirty;return !!(d&&(Object.keys(d.q||{}).length||Object.keys(d.s||{}).length||Object.keys(d.p||{}).length||d.profile||d.complete))}
+function pushPending(){
+  if(PREVIEW||!S)return;
+  if(pushing){pushAgain=true;return}
+  var tasks=[];
+  if(S.dirty.profile){var pl={topicOrder:S.plan.topicOrder,pos:S.plan.pos};
+    tasks.push(api({action:'profile',tid:S.tid,profile:{name:S.profile.name,school:S.profile.school,area:S.profile.area,experience:S.profile.experience,englishComfort:S.profile.englishComfort,plan:pl}}).then(function(r){if(!r.ok)throw 0;S.dirty.profile=0}))}
+  var qids=Object.keys(S.dirty.q||{}).filter(function(id){return qDone(S.resp[id])});
+  if(qids.length){var items=qids.slice(0,100).map(respPayload);
+    tasks.push(api({action:'responses',tid:S.tid,name:S.profile.name,items:items}).then(function(r){if(!r.ok)throw 0;items.forEach(function(it){delete S.dirty.q[it.qid]})}))}
+  Object.keys(S.dirty.s||{}).forEach(function(c){
+    var t=topicOfCode(c),pos=S.plan.pos[t].A===c?'A':'B';
+    tasks.push(api({action:'setrating',tid:S.tid,setCode:c,displayPos:pos,rating:S.setR[c]}).then(function(r){if(!r.ok)throw 0;delete S.dirty.s[c]}))});
+  Object.keys(S.dirty.p||{}).forEach(function(t){
+    var p=S.pref[t];
+    tasks.push(api({action:'preference',tid:S.tid,topic:t,preferredPos:p.pos,preferredCode:S.plan.pos[t][p.pos],reasons:p.reasons||[],comment:(p.comment||'').slice(0,1000)}).then(function(r){if(!r.ok)throw 0;delete S.dirty.p[t]}))});
+  if(!tasks.length)return;
+  pushing=true;setSaved('Saving…');
+  // the profile must reach the server before anything else is trusted: run it first, then the rest together
+  var failed=false;
+  var done=function(){
+    pushing=false;persist();var again=pushAgain;pushAgain=false;
+    var ds=$('#doneSave');
+    if(anyDirty()){S.fails=(S.fails||0)+1;setSaved(S.fails>2?'Not saved: check internet':'Offline, will retry',true);if(ds)ds.textContent='Your last answers are not saved yet. Please keep this page open and connected to the internet.';if(again&&!failed)pushPending()}
+    else{S.fails=0;setSaved('Saved ✓');if(ds)ds.textContent='All your answers are saved ✓'}
+  };
+  Promise.all(tasks.map(function(t){return t.catch(function(){failed=true;return 'fail'})})).then(function(){
+    if(S.dirty.complete&&!S.dirty.profile&&!Object.keys(S.dirty.q).length&&!Object.keys(S.dirty.s).length&&!Object.keys(S.dirty.p).length){
+      return api({action:'complete',tid:S.tid}).then(function(r){if(r.ok)S.dirty.complete=0}).catch(function(){failed=true})}
+  }).then(done,done);
+}
+
+/* ---------- screens ---------- */
+function btnGroup(cls,items,cur,act,key,opts){
+  return '<div class="btns '+cls+'">'+items.map(function(it){
+    return '<button type="button" aria-pressed="'+(cur===it.v)+'" class="b '+(it.c||'')+(cur===it.v?' on':'')+'" data-act="'+act+'" data-k="'+key+'" data-v="'+esc(it.v)+'"><strong>'+esc(it.l)+'</strong>'+(it.d?'<span>'+esc(it.d)+'</span>':'')+'</button>'}).join('')+'</div>';
+}
+function screenLogin(){
+  $('#top').hidden=true;$('#nav').hidden=true;
+  var last=store(LSKEY+'last'),cont=last&&store(LSKEY+last.tid);
+  $('#app').innerHTML='<h1>Question Quality Review</h1>'+
+  '<p class="muted">Thank you for helping us check AI-generated science questions for Class 8 students (Telangana State syllabus). You will review <b>two question sets for each of two topics</b>. You will not be told which tool made which set.</p>'+
+  (cont?'<div class="card" style="border-color:var(--accent)"><h3>Welcome back, '+esc(last.name)+'</h3><p class="muted small" style="margin:4px 0 10px">Your progress is saved on this device.</p><button class="btn" data-act="cont" style="width:100%">Continue where I stopped</button><p class="small muted" style="margin:10px 0 0">Not you? Use the form below.</p></div>':'')+
+  '<div class="card"><h3>Before you start</h3><ul style="margin:6px 0 0 18px;padding:0"><li>72 questions in total, about 60 minutes. You can stop any time and continue later: your progress is saved.</li>'+
+  '<li>Almost everything is a tap. Typing is optional.</li><li>Think of an <b>average student in your own class</b>.</li><li>To continue later, even on another phone, enter the same name and PIN.</li>'+
+  '<li>Your ratings are used only for this research study. Results are reported for the group, not by teacher name.</li></ul></div>'+
+  (PREVIEW?'<div class="banner"><b>Preview mode:</b> no server address is set, so answers stay on this device only.</div>':'')+
+  '<div class="card"><label class="f" style="margin-top:0">Your name</label><input type="text" id="fName" maxlength="60" autocomplete="name" placeholder="e.g. K. Lakshmi">'+
+  '<label class="f">Choose a 4-digit PIN (to resume later)</label><input type="password" id="fPin" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="••••">'+
+  '<div id="profileExtra"></div><p class="small muted" id="loginMsg" role="status"></p><div id="loginWarn"></div></div>';
+  $('#nav').hidden=false;$('#backBtn').style.display='none';$('#nextBtn').textContent='Continue';$('#nextBtn').disabled=false;
+  loginExtra=loginExtra||{};renderLoginExtra();
+  $('#nextBtn').onclick=doLogin;
+}
+var loginExtra=null,starting=false;
+function renderLoginExtra(){
+  var h='<label class="f">Your school</label>'+btnGroup('c3',SCHOOLS.map(function(x){return{v:x,l:x}}),loginExtra.school,'lx','school')+
+  '<label class="f">Where is your school?</label>'+btnGroup('c4',AREAS.map(function(x){return{v:x,l:x}}),loginExtra.area,'lx','area')+
+  '<label class="f">Years of teaching experience</label>'+btnGroup('c4',EXPS.map(function(x){return{v:x,l:x}}),loginExtra.experience,'lx','experience')+
+  '<label class="f">How comfortable are your students with English-medium text?</label>'+btnGroup('c3',COMFORT.map(function(x){return{v:x,l:x}}),loginExtra.englishComfort,'lx','englishComfort');
+  var e=$('#profileExtra');if(e)e.innerHTML=h;
+}
+function doLogin(){
+  var name=$('#fName').value.trim(),pin=$('#fPin').value.trim(),m=$('#loginMsg');
+  if(nameNorm(name).length<2){m.textContent='Please enter your name.';return}
+  if(!/^\d{4}$/.test(pin)){m.textContent='PIN must be 4 digits.';return}
+  startSession(mkTid(name,pin),name,false);
+}
+function normaliseState(){
+  S.dirty=S.dirty||{};['q','s','p'].forEach(function(k){S.dirty[k]=S.dirty[k]||{}});S.dirty.profile=S.dirty.profile||0;S.dirty.complete=S.dirty.complete||0;
+  S.resp=S.resp||{};S.setR=S.setR||{};S.pref=S.pref||{};
+}
+function mergeServer(S1,srv){ // server fills gaps (e.g. answers given on another phone); local answers win on conflict
+  (srv.responses||[]).forEach(function(r){if(!S1.resp[r.qid])S1.resp[r.qid]=respFromRow(r)});
+  (srv.setRatings||[]).forEach(function(r){if(!S1.setR[r.setCode])S1.setR[r.setCode]={coverage:+r.coverage,diffSpread:+r.diffSpread,variety:+r.variety,length:+r.length,suitability:+r.suitability,wouldUse:r.wouldUse}});
+  (srv.prefs||[]).forEach(function(r){if(!S1.pref[r.topic])S1.pref[r.topic]={pos:r.preferredPos,reasons:r.reasons?String(r.reasons).split('; '):[],comment:r.comment}});
+}
+function respFromRow(r){return {acc:+r.accuracy,lang:+r.language,diff:+r.difficultyDir+3,constr:+r.construction,syll:+r.syllabus,ctx:+r.context,perceived:+r.perceivedLevel,verdict:r.verdict,secs:+r.secs||0,issues:r.issues?String(r.issues).split('; '):[],comment:r.comment||''}}
+function startSession(tid,name,confirmedNew){
+  if(starting)return;starting=true;
+  var m=$('#loginMsg'),x=loginExtra||{},local=store(LSKEY+tid);
+  var fail=function(msg){starting=false;if(m)m.textContent=msg};
+  if(m)m.textContent='Checking for saved progress…';
+  var p=PREVIEW?Promise.resolve(null):apiGet('action=load&tid='+encodeURIComponent(tid)).catch(function(){return null});
+  p.then(function(srv){
+    var hasSrv=srv&&srv.ok&&srv.teacher;
+    if(local&&local.tid===tid){S=local;normaliseState();if(hasSrv)mergeServer(S,srv);return Promise.resolve()}
+    if(hasSrv){S=fromServer(tid,name,srv);return Promise.resolve()}
+    // brand-new teacher
+    if(!(x.school&&x.area&&x.experience&&x.englishComfort)){fail('Please answer the four questions about your school.');return Promise.reject('stop')}
+    var check=(PREVIEW||confirmedNew)?Promise.resolve(false):apiGet('action=namecheck&nk='+encodeURIComponent(nameNorm(name))).then(function(r){return !!(r&&r.ok&&r.exists)}).catch(function(){return false});
+    return check.then(function(exists){
+      if(exists){
+        starting=false;if(m)m.textContent='';
+        $('#loginWarn').innerHTML='<div class="banner"><b>A teacher with this name has already started.</b> If that was you, you may have typed a different PIN. Please go back and re-enter the PIN you used before, so your earlier answers are not lost.<div style="display:flex;gap:8px;margin-top:10px"><button class="btn sec" data-act="recheck">Re-enter PIN</button><button class="btn sec" data-act="newtid">I am a different teacher</button></div></div>';
+        return Promise.reject('stop');
+      }
+      S={tid:tid,profile:{name:name,school:x.school,area:x.area,experience:x.experience,englishComfort:x.englishComfort},resp:{},setR:{},pref:{},dirty:{q:{},s:{},p:{},profile:0,complete:0},started:Date.now()};
+      var reg=PREVIEW?Promise.resolve({ok:true}):api({action:'profile',tid:tid,profile:S.profile}).catch(function(){return null});
+      return reg.then(function(r){
+        var base=(r&&r.ok&&r.plan&&planValid(r.plan))?r.plan:null;
+        S.plan=buildPlan(tid,base);
+        if(!PREVIEW&&!(r&&r.ok))S.dirty.profile=1;     // server unreachable: register later, with this device's plan
+        S.profile.topicOrder=S.plan.topicOrder;
+      });
+    });
+  }).then(function(){
+    normaliseState();buildSteps();step=0;
+    for(var i=0;i<steps.length-1;i++){if(!stepDone(steps[i])&&steps[i].type!=='intro'){step=i;break}step=i+1}
+    if(steps[step].type==='q'&&steps[step].i===0)step=Math.max(0,step-1);
+    starting=false;persist();pushPending();$('#top').hidden=false;render('fresh');
+  }).catch(function(e){starting=false;if(e!=='stop'&&m)m.textContent='Something went wrong. Please try again.'});
+}
+function fromServer(tid,name,srv){
+  var t=srv.teacher;
+  var S2={tid:tid,profile:{name:name,school:t.school,area:t.area,experience:t.experience,englishComfort:t.englishComfort},resp:{},setR:{},pref:{},dirty:{q:{},s:{},p:{},profile:0,complete:0},started:Date.now()};
+  S2.plan=buildPlan(tid,t.plan);S2.profile.topicOrder=S2.plan.topicOrder;
+  var prev=S;S=S2;mergeServer(S2,srv);S=prev;
+  return S2;
+}
+
+function render(){
+  var s=steps[step],y=window.scrollY;
+  if(lastRendered!==step){qT0=Date.now();lastRendered=step}
+  var scored=steps.filter(function(x){return x.type==='q'||x.type==='set'||x.type==='pref'});
+  var doneN=scored.filter(stepDone).length;
+  $('#barFill').style.width=Math.round(doneN/scored.length*100)+'%';
+  $('#backBtn').style.display=step>0?'':'none';
+  var nb=$('#nextBtn');nb.onclick=next;$('#backBtn').onclick=back;
+  var html='';
+  if(s.type==='intro')html=screenIntro(s);
+  else if(s.type==='q')html=screenQ(s);
+  else if(s.type==='set')html=screenSet(s);
+  else if(s.type==='pref')html=screenPref(s);
+  else html=screenDone();
+  $('#app').innerHTML=html;
+  var ok=stepDone(s)||s.type==='intro';
+  nb.disabled=!ok;nb.textContent=s.type==='done'?'Close':(s.type==='pref'&&step===steps.length-2?'Finish':'Next');
+  if(s.type==='done'){$('#nav').hidden=true}else{$('#nav').hidden=false}
+  var tm=$('#topMeta');
+  tm.textContent=s.type==='q'?('Q '+(s.i+1)+'/18 · Set '+s.pos):(doneN+' / '+scored.length+' done');
+  window.scrollTo(0,s.type==='q'&&arguments[0]==='fresh'?0:y);
+}
+function screenIntro(s){
+  var t=QDATA.topics[s.topic];
+  var first=s.ti===0&&s.pos==='A';
+  return '<h1>'+esc(t.name)+'</h1><div class="card"><span class="pill">Topic '+(s.ti+1)+' of 2</span><span class="pill alt">Set '+s.pos+'</span>'+
+   '<h2 style="margin-top:12px">Set '+s.pos+': 18 questions</h2>'+
+   '<p class="muted">9 multiple-choice and 9 written-answer questions, shown in mixed order. For each one, tap your rating on six short scales, say what thinking level it tests, and give a verdict. The marked answer or the expected response guide is shown with each question.</p>'+
+   (first?'<p class="muted"><b>Tip:</b> tap the <b>?</b> at the top any time to see what each rating means. Judge each question on its own.</p>':'')+
+   (s.pos==='B'?'<p class="muted">Set B is a different set on the <b>same topic</b>. Please judge it as you did Set A, without comparing yet. You will compare the two sets at the end of this topic.</p>':'')+
+   '</div>';
+}
+function screenQ(s){
+  var q=QBYID[s.qid],r=S.resp[s.qid]||{};
+  var t=QDATA.topics[s.topic];
+  var h='<div class="card"><span class="pill">'+esc(t.name)+'</span><span class="pill alt">Set '+s.pos+' · Q '+(s.i+1)+' of 18</span><span class="pill alt">'+(q.kind==='obj'?'Multiple choice':'Written answer')+'</span>';
+  h+='<div class="qtext">'+esc(q.stem)+'</div>';
+  if(q.kind==='obj'){
+    h+=q.options.map(function(o,i){var L='ABCD'[i];var k=L===q.key;return '<div class="opt'+(k?' key':'')+'"><b>'+L+'</b><span>'+esc(o)+'</span>'+(k?'<span class="tag">✓ Answer key</span>':'')+'</div>'}).join('');
+  }else{
+    if(q.guide)h+='<div class="guide"><h4>Expected response guide</h4>'+esc(q.guide)+'</div>';
+    if(q.criteria&&q.criteria.length)h+='<div class="guide"><h4>Success criteria for marking</h4><ul>'+q.criteria.map(function(c){return '<li>'+esc(c)+'</li>'}).join('')+'</ul></div>';
+    if(q.wc)h+='<p class="small muted">Expected length: '+esc(q.wc)+'</p>';
+  }
+  h+='</div><div class="card"><h2 style="margin-top:0">Your ratings</h2>';
+  CRITS.forEach(function(c){
+    h+='<div class="crit"><h3>'+esc(c.t)+'</h3><p class="q">'+esc(c.q(q.kind))+'</p>';
+    if(c.five)h+=btnGroup('c5',DIFF5,r[c.k],'rate',c.k);
+    else h+=btnGroup('c4',SCALE4.map(function(o){return{v:o.v,l:o.l,d:c.d[o.v]}}),r[c.k],'rate',c.k);
+    h+='</div>';
+  });
+  h+='<div class="crit"><h3>Thinking level</h3><p class="q">Which level of thinking does this question really need from your students?</p>'+btnGroup('c6',BLOOM,r.perceived,'rate','perceived')+'</div>';
+  h+='<div class="crit"><h3>Your verdict</h3><p class="q">Would you put this question in a test for your class?</p>'+btnGroup('c4',VERDICTS,r.verdict,'rate','verdict')+'</div>';
+  if(r.verdict&&r.verdict!=='asis'){
+    h+='<div class="crit"><h3>What is the problem? <span class="muted small">(optional, tap any)</span></h3><div class="chips">'+ISSUES.map(function(x){return '<button type="button" class="chip'+((r.issues||[]).indexOf(x)>=0?' on':'')+'" aria-pressed="'+((r.issues||[]).indexOf(x)>=0)+'" data-act="issue" data-v="'+esc(x)+'">'+esc(x)+'</button>'}).join('')+'</div>'+
+    '<textarea id="cmt" maxlength="800" placeholder="Anything else? (optional)" style="margin-top:10px">'+esc(r.comment||'')+'</textarea></div>';
+  }
+  h+='</div>';
+  if(!qDone(r))h+='<p class="hint">Answer all six scales, thinking level and verdict to continue.</p>';
+  return h;
+}
+function screenSet(s){
+  var t=QDATA.topics[s.topic],r=S.setR[s.code]||{};
+  var h='<h1>Rate Set '+s.pos+' as a whole</h1><p class="muted">'+esc(t.name)+' · all 18 questions of Set '+s.pos+'</p><div class="card">';
+  SETCRITS.forEach(function(c){
+    h+='<div class="crit"><h3>'+esc(c.t)+'</h3><p class="q">'+esc(c.q)+'</p>'+btnGroup('c4',SCALE4.map(function(o){return{v:o.v,l:o.l}}),r[c.k],'srate',c.k)+'</div>';
+  });
+  h+='<div class="crit"><h3>Would you use this set in your class?</h3>'+btnGroup('c3',WOULDUSE,r.wouldUse,'srate','wouldUse')+'</div></div>';
+  return h;
+}
+function screenPref(s){
+  var t=QDATA.topics[s.topic],p=S.pref[s.topic]||{};
+  var h='<h1>Which set is better?</h1><p class="muted">'+esc(t.name)+'. If you had to choose one set for your students, which would it be?</p><div class="card">'+
+   btnGroup('c2',[{v:'A',l:'Set A'},{v:'B',l:'Set B'}],p.pos,'pref','pos')+
+   '<div class="crit"><h3>Why? <span class="muted small">(optional, tap any)</span></h3><div class="chips">'+PREFREASONS.map(function(x){return '<button type="button" class="chip'+((p.reasons||[]).indexOf(x)>=0?' on':'')+'" aria-pressed="'+((p.reasons||[]).indexOf(x)>=0)+'" data-act="preason" data-v="'+esc(x)+'">'+esc(x)+'</button>'}).join('')+'</div>'+
+   '<textarea id="pcmt" maxlength="800" placeholder="Anything else? (optional)" style="margin-top:10px">'+esc(p.comment||'')+'</textarea></div></div>';
+  return h;
+}
+function screenDone(){
+  return '<h1>Thank you!</h1><div class="card"><p>You have rated every question. Your feedback will help us improve how question sets are generated for students in Tier 2 and Tier 3 schools.</p><p class="small" id="doneSave" role="status">'+(anyDirty()?'Saving your last answers…':'All your answers are saved ✓')+'</p><p class="muted small">You can close this page once it says saved. If you change your mind about any answer, sign in again with the same name and PIN and use Back.</p></div>';
+}
+
+/* ---------- actions ---------- */
+function next(){
+  var s=steps[step];
+  if(!(s.type==='intro'||stepDone(s)))return;
+  bumpSecs();
+  if(s.type==='q')S.dirty.q[s.qid]=1;
+  if(s.type==='set')S.dirty.s[s.code]=1;
+  if(s.type==='pref')S.dirty.p[s.topic]=1;
+  if(s.type==='done')return;
+  step++;
+  if(steps[step].type==='done')S.dirty.complete=1;
+  persist();pushPending();
+  render('fresh');
+}
+function back(){if(step>0){bumpSecs();step--;render('fresh')}}
+document.addEventListener('click',function(e){
+  var el=e.target.closest('[data-act]');if(!el)return;
+  var a=el.dataset.act,k=el.dataset.k,v=el.dataset.v;
+  if(a==='lx'){loginExtra[k]=v;renderLoginExtra();return}
+  if(a==='cont'){var last=store(LSKEY+'last');if(last)startSession(last.tid,last.name,false);return}
+  if(a==='recheck'){$('#loginWarn').innerHTML='';$('#fPin').value='';$('#fPin').focus();return}
+  if(a==='newtid'){var nm=$('#fName').value.trim(),pn=$('#fPin').value.trim();$('#loginWarn').innerHTML='';startSession(mkTid(nm,pn),nm,true);return}
+  var s=steps[step];if(!S||!s)return;
+  if(a==='rate'){var r=S.resp[s.qid]=S.resp[s.qid]||{};r[k]=(k==='verdict')?v:+v;
+    if(k==='verdict'&&v==='asis'){r.issues=[];r.comment=''}
+    S.dirty.q[s.qid]=1;persist();render();var nb=$('#nextBtn');if(qDone(r)){nb.classList.add('ready');setTimeout(function(){nb.classList.remove('ready')},1500)}}
+  if(a==='issue'){var r2=S.resp[s.qid];r2.issues=r2.issues||[];var i=r2.issues.indexOf(v);if(i>=0)r2.issues.splice(i,1);else r2.issues.push(v);S.dirty.q[s.qid]=1;persist();render()}
+  if(a==='srate'){var r3=S.setR[s.code]=S.setR[s.code]||{};r3[k]=(k==='wouldUse')?v:+v;S.dirty.s[s.code]=1;persist();render()}
+  if(a==='pref'){var p=S.pref[s.topic]=S.pref[s.topic]||{};p.pos=v;S.dirty.p[s.topic]=1;persist();render()}
+  if(a==='preason'){var p2=S.pref[s.topic];if(!p2){return}p2.reasons=p2.reasons||[];var j=p2.reasons.indexOf(v);if(j>=0)p2.reasons.splice(j,1);else p2.reasons.push(v);S.dirty.p[s.topic]=1;persist();render()}
+});
+document.addEventListener('input',function(e){
+  if(!S)return;var s=steps[step];
+  if(e.target.id==='cmt'&&S.resp[s.qid]){S.resp[s.qid].comment=e.target.value;S.dirty.q[s.qid]=1;persist()}
+  if(e.target.id==='pcmt'){var p=S.pref[s.topic]=S.pref[s.topic]||{};p.comment=e.target.value;if(p.pos)S.dirty.p[s.topic]=1;persist()}
+});
+$('#helpBtn').onclick=function(){
+  var h='<div class="modal" id="mod"><div><h2 style="margin-top:0">What the ratings mean</h2><p class="muted small">Always think of an average student in your own class.</p><table><tr><th>Scale</th><th>4 · Excellent</th><th>3 · Good</th><th>2 · Needs work</th><th>1 · Poor</th></tr>';
+  CRITS.filter(function(c){return !c.five}).forEach(function(c){h+='<tr><td><b>'+esc(c.t)+'</b></td><td>'+c.d[4]+'</td><td>'+c.d[3]+'</td><td>'+c.d[2]+'</td><td>'+c.d[1]+'</td></tr>'});
+  h+='</table><h3 style="margin-top:14px">Difficulty</h3><p class="small">“Just right” means roughly half to two-thirds of your class would answer correctly. “Too easy” or “Too hard” are both problems.</p><h3>Thinking level</h3><p class="small">'+BLOOM.map(function(b){return '<b>'+b.l+'</b>: '+b.d}).join(' · ')+'</p><h3>Verdict</h3><p class="small"><b>Use as it is</b>, <b>Minor edit</b> (small wording fix), <b>Major rewrite</b>, or <b>Reject</b>.</p><button class="btn" style="width:100%;margin-top:10px" onclick="document.getElementById(\'mod\').remove()">Got it</button></div></div>';
+  $('#modalHost').innerHTML=h;
+};
+window.addEventListener('online',function(){if(S)pushPending()});
+document.addEventListener('visibilitychange',function(){if(S&&steps.length){if(document.hidden){bumpSecs();persist()}pushPending()}});
+window.addEventListener('pagehide',function(){if(S&&steps.length){bumpSecs();persist();pushPending()}});
+setInterval(function(){if(S&&anyDirty()&&!document.hidden)pushPending()},30000);
+
+if(location.hash==='#admin'){document.addEventListener('DOMContentLoaded',function(){showAdmin()})}
+else{document.addEventListener('DOMContentLoaded',screenLogin)}
+</script>
+<script>
+/* ================= STATISTICS ================= */
+var ST={};
+ST.mean=function(a){return a.reduce(function(s,x){return s+x},0)/a.length};
+ST.sd=function(a){if(a.length<2)return NaN;var m=ST.mean(a);return Math.sqrt(a.reduce(function(s,x){return s+(x-m)*(x-m)},0)/(a.length-1))};
+ST.lgamma=function(x){var c=[76.18009172947146,-86.50532032941677,24.01409824083091,-1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5];var y=x,t=x+5.5;t-=(x+.5)*Math.log(t);var s=1.000000000190015;for(var j=0;j<6;j++)s+=c[j]/++y;return -t+Math.log(2.5066282746310005*s/x)};
+ST.betacf=function(a,b,x){var MAXIT=300,EPS=3e-14,FPMIN=1e-300,qab=a+b,qap=a+1,qam=a-1,c=1,d=1-qab*x/qap;if(Math.abs(d)<FPMIN)d=FPMIN;d=1/d;var h=d;
+ for(var m=1;m<=MAXIT;m++){var m2=2*m,aa=m*(b-m)*x/((qam+m2)*(a+m2));d=1+aa*d;if(Math.abs(d)<FPMIN)d=FPMIN;c=1+aa/c;if(Math.abs(c)<FPMIN)c=FPMIN;d=1/d;h*=d*c;
+ aa=-(a+m)*(qab+m)*x/((a+m2)*(qap+m2));d=1+aa*d;if(Math.abs(d)<FPMIN)d=FPMIN;c=1+aa/c;if(Math.abs(c)<FPMIN)c=FPMIN;d=1/d;var del=d*c;h*=del;if(Math.abs(del-1)<EPS)break}return h};
+ST.ibeta=function(x,a,b){if(x<=0)return 0;if(x>=1)return 1;var bt=Math.exp(ST.lgamma(a+b)-ST.lgamma(a)-ST.lgamma(b)+a*Math.log(x)+b*Math.log(1-x));
+ return x<(a+1)/(a+b+2)?bt*ST.betacf(a,b,x)/a:1-bt*ST.betacf(b,a,1-x)/b};
+ST.pt2=function(t,df){return ST.ibeta(df/(df+t*t),df/2,.5)};           // two-sided p
+ST.qt=function(p,df){var lo=0,hi=100;for(var i=0;i<100;i++){var mid=(lo+hi)/2;if(ST.pt2(mid,df)>1-p)lo=mid;else hi=mid}return (lo+hi)/2}; // two-sided crit for coverage p
+ST.erf=function(x){var s=x<0?-1:1;x=Math.abs(x);var t=1/(1+.3275911*x);var y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-.284496736)*t+.254829592)*t*Math.exp(-x*x);return s*y};
+ST.pnorm=function(z){return .5*(1+ST.erf(z/Math.SQRT2))};
+ST.pairedT=function(a,b){var d=a.map(function(x,i){return x-b[i]}),n=d.length;if(n<2)return null;var m=ST.mean(d),s=ST.sd(d),se=s/Math.sqrt(n);var t=s===0?(m===0?0:Infinity):m/se,df=n-1;
+ var p=s===0?(m===0?1:0):ST.pt2(t,df),tc=ST.qt(.95,df);return {n:n,mean:m,sd:s,t:t,df:df,p:p,ci:[m-tc*se,m+tc*se],dz:s===0?NaN:m/s}};
+ST.wilcoxon=function(a,b){var d=a.map(function(x,i){return x-b[i]}).filter(function(x){return Math.abs(x)>1e-12}),n=d.length;if(n<1)return {n:0,p:1,rrb:0};
+ var idx=d.map(function(x,i){return i}).sort(function(i,j){return Math.abs(d[i])-Math.abs(d[j])}),ranks=new Array(n),ties=false,tieAdj=0;
+ for(var i=0;i<n;){var j=i;while(j+1<n&&Math.abs(Math.abs(d[idx[j+1]])-Math.abs(d[idx[i]]))<1e-12)j++;var r=(i+j)/2+1;if(j>i){ties=true;var t=j-i+1;tieAdj+=t*t*t-t}for(var k=i;k<=j;k++)ranks[idx[k]]=r;i=j+1}
+ var Wp=0,Wm=0;d.forEach(function(x,i){if(x>0)Wp+=ranks[i];else Wm+=ranks[i]});var tot=n*(n+1)/2,p;
+ if(n<=40){var R2=ranks.map(function(r){return Math.round(r*2)}),T=R2.reduce(function(x,y){return x+y},0),cnt=new Array(T+1).fill(0);cnt[0]=1;R2.forEach(function(r2){for(var s=T;s>=r2;s--)cnt[s]+=cnt[s-r2]});
+  var all=Math.pow(2,n),w2=Math.round(Math.min(Wp,Wm)*2),lo=0;for(var q=0;q<=w2;q++)lo+=cnt[q];p=Math.min(1,2*lo/all)}
+ else{var mu=n*(n+1)/4,sg=Math.sqrt(n*(n+1)*(2*n+1)/24-tieAdj/48),z=(Math.abs(Wp-mu)-.5)/sg;p=Math.min(1,2*(1-ST.pnorm(z)))}
+ return {n:n,Wp:Wp,Wm:Wm,p:p,rrb:(Wp-Wm)/tot,exact:n<=40}};
+ST.sign=function(k1,k2){var n=k1+k2;if(n===0)return 1;var m=Math.min(k1,k2),s=0;for(var i=0;i<=m;i++)s+=Math.exp(ST.lgamma(n+1)-ST.lgamma(i+1)-ST.lgamma(n-i+1)-n*Math.log(2));return Math.min(1,2*s)};
+ST.holm=function(ps){var o=ps.map(function(p,i){return{p:p,i:i}}).sort(function(a,b){return a.p-b.p}),m=ps.length,out=new Array(m),mx=0;o.forEach(function(x,k){var v=Math.min(1,(m-k)*x.p);mx=Math.max(mx,v);out[x.i]=mx});return out};
+ST.boot=function(d,fn,B,seed){var r=rng('boot'+seed),n=d.length,vals=[];for(var b=0;b<B;b++){var s=[];for(var i=0;i<n;i++)s.push(d[Math.floor(r()*n)]);var v=fn(s);if(isFinite(v))vals.push(v)}vals.sort(function(a,b){return a-b});
+ if(vals.length<50)return [NaN,NaN];return [vals[Math.floor(.025*vals.length)],vals[Math.floor(.975*vals.length)]]};
+ST.wilson=function(k,n){if(!n)return [NaN,NaN];var z=1.96,p=k/n,d=1+z*z/n,c=p+z*z/(2*n),a=z*Math.sqrt(p*(1-p)/n+z*z/(4*n*n));return [(c-a)/d,(c+a)/d]};
+ST.alpha=function(units){ // interval Krippendorff's alpha; units: array of arrays of numbers
+ var n=0,sum=0,sumsq=0,Do=0;units.forEach(function(u){var m=u.length;if(m<2)return;var s2=0,ss=0,sq=0;u.forEach(function(v){s2+=v;sq+=v*v});
+  Do+=(2*m*sq-2*s2*s2)/(m-1);n+=m;sum+=s2;sumsq+=sq});
+ if(n<2)return NaN;Do/=n;var De=(2*n*sumsq-2*sum*sum)/(n*(n-1));return De===0?NaN:1-Do/De};
+ST.wkappa=function(x,y,k){var n=x.length;if(!n)return NaN;var O=[],rx=new Array(k).fill(0),ry=new Array(k).fill(0),i,j;for(i=0;i<k;i++)O.push(new Array(k).fill(0));
+ for(var t=0;t<n;t++){O[x[t]-1][y[t]-1]++;rx[x[t]-1]++;ry[y[t]-1]++}var num=0,den=0;for(i=0;i<k;i++)for(j=0;j<k;j++){var w=(i-j)*(i-j)/((k-1)*(k-1));num+=w*O[i][j]/n;den+=w*rx[i]*ry[j]/(n*n)}return den===0?NaN:1-num/den};
+function fmt(x,d){d=d==null?1:d;return (x==null||!isFinite(x))?'–':x.toFixed(d)}
+function fp(p){return p==null||!isFinite(p)?'–':(p<.001?'<0.001':p.toFixed(3))}
+function pct(x,d){return (x==null||!isFinite(x))?'–':(x*100).toFixed(d==null?0:d)+'%'}
+function dzLabel(d){var a=Math.abs(d);return !isFinite(d)?'':a<.2?'negligible':a<.5?'small':a<.8?'medium':'large'}
+
+/* ================= ADMIN DATA ================= */
+var AD=null;
+var MODELS=['claude','qwen'];
+var MNAME={claude:'Claude',qwen:'Qwen'};
+var CRITKEYS=[['accuracy','Scientific accuracy'],['language','Language and clarity'],['difficulty','Difficulty fit'],['construction','Construction'],['syllabus','Syllabus fit'],['context','Familiar context'],['bloomAlign','Bloom alignment']];
+function serverScore(r){var d=Math.abs(r.diffRating-3),ds=d===0?4:d===1?3:1,bd=Math.abs(r.claimedLevel-r.perceived),bl=bd===0?4:bd===1?3:bd===2?2:1;
+ var W={acc:25,lang:15,diff:15,constr:15,syll:10,ctx:10,bloom:10},v={acc:r.acc,lang:r.lang,diff:ds,constr:r.constr,syll:r.syll,ctx:r.ctx,bloom:bl},t=0,w=0;for(var k in W){t+=W[k]*(v[k]-1)/3;w+=W[k]}return {v:v,score:Math.round(t/w*1000)/10}}
+function demoData(){
+  var r=rng('demo-seed'),teachers=[],resp=[],sets=[],prefs=[];
+  var setMap={RK27:{model:'claude',topic:'reflection'},RX41:{model:'qwen',topic:'reflection'},BM63:{model:'qwen',topic:'biodiversity'},BQ18:{model:'claude',topic:'biodiversity'}}; // fake mapping for the demo only
+  var gauss=function(){var u=1-r(),v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)};
+  var schools=SCHOOLS,areas=AREAS,exps=EXPS,comf=COMFORT;
+  for(var t=0;t<15;t++){
+    var tid='demo'+t,len=gauss()*.35;
+    teachers.push({tid:tid,name:'Demo Teacher '+(t+1),school:schools[t%3],area:areas[t%4],experience:exps[t%4],englishComfort:comf[(t*7)%3],createdAt:'',completedAt:t<13?'x':''});
+    Object.keys(setMap).forEach(function(c){
+      var model=setMap[c].model,bias=(model==='claude'?.18:0),q=QDATA.topics[setMap[c].topic].sets[c];
+      q.forEach(function(qq,i){
+        var qEff=gauss()*.3;
+        var f=function(base){var x=Math.round(Math.min(4,Math.max(1,base+bias+len+qEff+gauss()*.6)));return x};
+        var o={tid:tid,teacher:'Demo Teacher '+(t+1),topic:setMap[c].topic,setCode:c,model:model,qid:qq.id,qn:qq.n,kind:qq.kind,claimedLevel:qq.level,
+          acc:f(3.5),lang:f(model==='claude'?3.3:2.9),constr:f(3.1),syll:f(3.3),ctx:f(2.9),
+          diffRating:Math.min(5,Math.max(1,Math.round(3+(qq.level-3.5)*.25+gauss()*.8+(model==='qwen'?-.15:.05)))),
+          perceived:Math.min(6,Math.max(1,Math.round(qq.level+gauss()*.9-(qq.level>3?.6:0))))};
+        var sc=serverScore(o);
+        resp.push({updatedAt:'',tid:tid,teacher:o.teacher,topic:o.topic,setCode:c,model:model,qid:o.qid,qn:o.qn,kind:o.kind,claimedLevel:o.claimedLevel,perceivedLevel:o.perceived,
+          displayPos:'A',qOrder:i+1,accuracy:o.acc,language:o.lang,difficulty:sc.v.diff,construction:o.constr,syllabus:o.syll,context:o.ctx,bloomAlign:sc.v.bloom,
+          secs:Math.round(10+r()*30),qScore:sc.score,difficultyDir:o.diffRating-3,verdict:sc.score>78?'asis':sc.score>64?'minor':sc.score>50?'major':'reject',hardFail:(o.acc===1||sc.score<=50)?1:0,usable:sc.score>64?1:0,issues:'',comment:''});
+      });
+      sets.push({tid:tid,topic:setMap[c].topic,setCode:c,model:model,displayPos:'A',coverage:Math.round(Math.min(4,Math.max(1,3+bias+len+gauss()*.6))),diffSpread:Math.round(Math.min(4,Math.max(1,3+len+gauss()*.6))),
+        variety:Math.round(Math.min(4,Math.max(1,3+len+gauss()*.6))),length:Math.round(Math.min(4,Math.max(1,3+len+gauss()*.6))),suitability:Math.round(Math.min(4,Math.max(1,3+bias+len+gauss()*.6))),wouldUse:r()<.55+bias?'yes':'edits'});
+    });
+    ['reflection','biodiversity'].forEach(function(tp){var cs=Object.keys(setMap).filter(function(c){return setMap[c].topic===tp});var pick=r()<.6?cs.filter(function(c){return setMap[c].model==='claude'})[0]:cs.filter(function(c){return setMap[c].model==='qwen'})[0];
+      prefs.push({tid:tid,topic:tp,preferredPos:'A',preferredCode:pick,preferredModel:setMap[pick].model,reasons:'Clearer language'})});
+  }
+  return {ok:true,setMap:setMap,teachers:teachers,responses:resp,setRatings:sets,prefs:prefs,demo:true};
+}
+
+/* ================= ANALYSIS ================= */
+function expectedCount(topic,kind){var n=0;for(var id in QBYID){var q=QBYID[id];if(q.topic===topic&&(!kind||q.kind===kind))n++}return n/2}
+function teacherMeans(rows,sel,key,minFrac){ // returns {tid:{claude:mean,qwen:mean}} for teachers with >= minFrac of expected in both models
+  var by={};rows.forEach(function(r){if(!sel(r))return;var o=by[r.tid]=by[r.tid]||{claude:[],qwen:[]};o[r.model].push(+r[key])});
+  return by}
+function pairedFromBy(by,minN){var a=[],b=[],tids=[];Object.keys(by).forEach(function(t){var o=by[t];if(o.claude.length>=minN&&o.qwen.length>=minN){a.push(ST.mean(o.claude));b.push(ST.mean(o.qwen));tids.push(t)}});return {a:a,b:b,tids:tids}}
+function fullTest(a,b,seed){
+  var n=a.length;if(n<2)return {n:n};
+  var tt=ST.pairedT(a,b),wl=ST.wilcoxon(a,b),d=a.map(function(x,i){return x-b[i]});
+  var dzci=ST.boot(d,function(s){var sd=ST.sd(s);return sd>0?ST.mean(s)/sd:NaN},4000,seed);
+  var pos=d.filter(function(x){return x>0}).length,neg=d.filter(function(x){return x<0}).length;
+  return {n:n,m1:ST.mean(a),m2:ST.mean(b),diff:tt.mean,ci:tt.ci,t:tt.t,df:tt.df,p:tt.p,dz:tt.dz,dzci:dzci,wp:wl.p,rrb:wl.rrb,pos:pos,neg:neg,signp:ST.sign(pos,neg)};
+}
+function analyse(D){
+  var R={D:D},resp=D.responses;
+  var topics=Object.keys(QDATA.topics);
+  // eligibility: respondents with >=50% of each model's questions in scope
+  var scopes=[['overall',function(r){return true},null,null]];
+  topics.forEach(function(t){scopes.push([t,function(r){return r.topic===t},t,null])});
+  R.main={};
+  scopes.forEach(function(sc){
+    var by=teacherMeans(resp,sc[1],'qScore');var minN=Math.ceil(expectedCount(sc[2],null)*0.5)||18;if(!sc[2])minN=18;
+    var pr=pairedFromBy(by,minN);R.main[sc[0]]=fullTest(pr.a,pr.b,sc[0]);R.main[sc[0]].pairs=pr});
+  // Holm across the two topic tests
+  var tp=topics.map(function(t){return R.main[t].p}),hp=ST.holm(tp);topics.forEach(function(t,i){R.main[t].holm=hp[i]});
+  // criteria
+  R.crit=CRITKEYS.map(function(c){var by=teacherMeans(resp,function(){return true},c[0]);var pr=pairedFromBy(by,18);var t=fullTest(pr.a,pr.b,c[0]);t.key=c[0];t.label=c[1];return t});
+  var ph=ST.holm(R.crit.map(function(c){return c.n>1?c.p:1}));R.crit.forEach(function(c,i){c.holm=ph[i]});
+  // question type
+  R.kind=['obj','sub'].map(function(k){var by=teacherMeans(resp,function(r){return r.kind===k},'qScore');var pr=pairedFromBy(by,Math.ceil(expectedCount(null,k)*0.5)||9);var t=fullTest(pr.a,pr.b,k);t.label=k==='obj'?'Multiple choice':'Written answer';return t});
+  var kh=ST.holm(R.kind.map(function(c){return c.n>1?c.p:1}));R.kind.forEach(function(c,i){c.holm=kh[i]});
+  // hard fail and usable rates per teacher
+  R.rates={};['hardFail','usable'].forEach(function(k){var by=teacherMeans(resp,function(){return true},k);var pr=pairedFromBy(by,18);R.rates[k]=fullTest(pr.a,pr.b,k)});
+  // pooled counts
+  R.pool={};MODELS.forEach(function(m){var rr=resp.filter(function(r){return r.model===m});var n=rr.length;
+   var hf=rr.filter(function(r){return +r.hardFail===1}).length,us=rr.filter(function(r){return +r.usable===1}).length,te=rr.filter(function(r){return +r.difficultyDir<0}).length,th=rr.filter(function(r){return +r.difficultyDir>0}).length;
+   var vc={asis:0,minor:0,major:0,reject:0};rr.forEach(function(r){vc[r.verdict]=(vc[r.verdict]||0)+1});
+   R.pool[m]={n:n,hf:hf,hfci:ST.wilson(hf,n),us:us,usci:ST.wilson(us,n),te:te,th:th,vc:vc,score:n?ST.mean(rr.map(function(r){return +r.qScore})):NaN}});
+  // preference
+  R.pref={};topics.concat(['all']).forEach(function(t){var pp=D.prefs.filter(function(p){return t==='all'||p.topic===t});var c=pp.filter(function(p){return p.preferredModel==='claude'}).length,q=pp.length-c;R.pref[t]={claude:c,qwen:q,n:pp.length,p:ST.sign(c,q)}});
+  // set-level
+  R.setl=[['coverage','Topic coverage'],['diffSpread','Difficulty mix'],['variety','Variety'],['length','Length and time'],['suitability','Overall suitability']].map(function(c){
+   var by={};D.setRatings.forEach(function(s){var o=by[s.tid]=by[s.tid]||{claude:[],qwen:[]};o[s.model].push(+s[c[0]])});var pr=pairedFromBy(by,2);var t=fullTest(pr.a,pr.b,'set'+c[0]);t.label=c[1];return t});
+  var sh=ST.holm(R.setl.map(function(c){return c.n>1?c.p:1}));R.setl.forEach(function(c,i){c.holm=sh[i]});
+  R.wouldUse={};MODELS.forEach(function(m){var ss=D.setRatings.filter(function(s){return s.model===m});R.wouldUse[m]={n:ss.length,yes:ss.filter(function(s){return s.wouldUse==='yes'}).length,edits:ss.filter(function(s){return s.wouldUse==='edits'}).length,no:ss.filter(function(s){return s.wouldUse==='no'}).length}});
+  // reliability
+  R.rel={};MODELS.concat(['all']).forEach(function(m){var by={};resp.forEach(function(r){if(m!=='all'&&r.model!==m)return;(by[r.qid]=by[r.qid]||[]).push(+r.qScore)});R.rel[m]=ST.alpha(Object.keys(by).map(function(k){return by[k]}))});
+  R.kappa={};MODELS.forEach(function(m){var rr=resp.filter(function(r){return r.model===m});var x=rr.map(function(r){return +r.claimedLevel}),y=rr.map(function(r){return +r.perceivedLevel});
+   R.kappa[m]={k:ST.wkappa(x,y,6),exact:x.length?x.filter(function(v,i){return v===y[i]}).length/x.length:NaN,within1:x.length?x.filter(function(v,i){return Math.abs(v-y[i])<=1}).length/x.length:NaN,n:x.length}});
+  // item level
+  R.items={};Object.keys(D.setMap).forEach(function(c){var by={};resp.filter(function(r){return r.setCode===c}).forEach(function(r){(by[r.qid]=by[r.qid]||[]).push(r)});
+   R.items[c]=Object.keys(by).map(function(id){var rr=by[id],q=QBYID[id];return {qid:id,n:rr.length,kind:q.kind,level:q.level,stem:q.stem,score:ST.mean(rr.map(function(r){return +r.qScore})),acc:ST.mean(rr.map(function(r){return +r.accuracy})),
+     hf:rr.filter(function(r){return +r.hardFail===1}).length,usable:ST.mean(rr.map(function(r){return +r.usable})),perc:ST.mean(rr.map(function(r){return +r.perceivedLevel})),dir:ST.mean(rr.map(function(r){return +r.difficultyDir}))}}).sort(function(a,b){return a.score-b.score})});
+  R.itemTest={};topics.forEach(function(t){var cs=Object.keys(D.setMap).filter(function(c){return D.setMap[c].topic===t});var g={};cs.forEach(function(c){g[D.setMap[c].model]=(R.items[c]||[]).map(function(x){return x.score})});
+   if(g.claude&&g.qwen&&g.claude.length>1&&g.qwen.length>1){var a=g.claude,b=g.qwen,va=Math.pow(ST.sd(a),2)/a.length,vb=Math.pow(ST.sd(b),2)/b.length,tt=(ST.mean(a)-ST.mean(b))/Math.sqrt(va+vb),df=Math.pow(va+vb,2)/(va*va/(a.length-1)+vb*vb/(b.length-1));
+    R.itemTest[t]={diff:ST.mean(a)-ST.mean(b),p:ST.pt2(tt,df),n1:a.length,n2:b.length}}});
+  // subgroups
+  R.sub={};var tmap={};D.teachers.forEach(function(t){tmap[t.tid]=t});var pr0=R.main.overall.pairs||{tids:[],a:[],b:[]};
+  [['school','School type'],['area','Location'],['experience','Experience'],['englishComfort','Students\' English']].forEach(function(f){var g={};pr0.tids.forEach(function(tid,i){var v=(tmap[tid]||{})[f[0]]||'?';(g[v]=g[v]||[]).push(pr0.a[i]-pr0.b[i])});
+   R.sub[f[0]]={label:f[1],rows:Object.keys(g).map(function(k){return {k:k,n:g[k].length,diff:ST.mean(g[k])}})}});
+  R.teachers={total:D.teachers.length,done:D.teachers.filter(function(t){return t.completedAt}).length,eligible:R.main.overall.n||0};
+  return R;
+}
+
+
+var EXCL={};
+function cleanAD(d){ // drop rows that do not belong to the current question bank (stale or tampered)
+  d.responses=(d.responses||[]).filter(function(r){return QBYID[r.qid]&&d.setMap[r.setCode]&&r.model===d.setMap[r.setCode].model});
+  d.teachers=d.teachers||[];d.setRatings=(d.setRatings||[]).filter(function(r){return d.setMap[r.setCode]});d.prefs=(d.prefs||[]).filter(function(r){return d.setMap[r.preferredCode]});
+  return d}
+function filterD(D){return {setMap:D.setMap,demo:D.demo,teachers:D.teachers.filter(function(t){return !EXCL[t.tid]}),responses:D.responses.filter(function(r){return !EXCL[r.tid]}),
+  setRatings:D.setRatings.filter(function(r){return !EXCL[r.tid]}),prefs:D.prefs.filter(function(r){return !EXCL[r.tid]})}}
+function median(a){if(!a.length)return null;a=a.slice().sort(function(x,y){return x-y});var m=Math.floor(a.length/2);return a.length%2?a[m]:(a[m-1]+a[m])/2}
+function teacherQuality(D){
+  var by={},sr={},pf={},names={},total=Object.keys(QBYID).length;
+  D.responses.forEach(function(r){(by[r.tid]=by[r.tid]||[]).push(r)});D.setRatings.forEach(function(r){sr[r.tid]=(sr[r.tid]||0)+1});D.prefs.forEach(function(r){pf[r.tid]=(pf[r.tid]||0)+1});
+  D.teachers.forEach(function(t){var k=nameNorm(t.name||'');names[k]=(names[k]||0)+1});
+  return D.teachers.map(function(t){
+    var rr=by[t.tid]||[],n=rr.length,flags=[],soft=[];
+    var complete=n>=total&&(sr[t.tid]||0)>=4&&(pf[t.tid]||0)>=2;
+    var secs=rr.map(function(r){return +r.secs||0}),med=median(secs);
+    var uni=n?rr.filter(function(r){var v=[+r.accuracy,+r.language,+r.construction,+r.syllabus,+r.context];return v.every(function(x){return x===v[0]})}).length/n:0;
+    if(n>=20&&uni>=.9)flags.push('Same rating on almost every scale ('+pct(uni)+')');
+    if(med!=null&&n>=10&&med<10)flags.push('Very fast (median '+Math.round(med)+' s per question)');
+    if(names[nameNorm(t.name||'')]>1)flags.push('Name appears more than once');
+    if(!complete)soft.push('Incomplete');
+    return {t:t,n:n,total:total,complete:complete,med:med,flags:flags,soft:soft}});
+}
+
+/* ================= ADMIN UI ================= */
+function showAdmin(){
+  $('#top').hidden=true;$('#nav').hidden=true;
+  var app=$('#app');app.classList.add('wide');
+  app.innerHTML='<h1>Admin dashboard</h1><div class="card"><label class="f" style="margin-top:0">Admin passcode</label><input type="password" id="apass" placeholder="Passcode set in Script Properties"><p class="small muted" id="amsg"></p><div style="display:flex;gap:10px"><button class="btn" id="aGo" style="flex:0 0 auto">Load results</button>'+
+   (PREVIEW?'<button class="btn sec" id="aDemo" style="flex:0 0 auto">Load demo data</button>':'')+'</div></div>';
+  $('#aGo').onclick=function(){
+    if(PREVIEW){$('#amsg').textContent='No server address is set in this file. Use demo data to preview the dashboard.';return}
+    $('#amsg').textContent='Loading…';
+    api({action:'admin',pass:$('#apass').value}).then(function(d){if(!d.ok){$('#amsg').textContent='Could not load: '+(d.error||'error');return}AD=cleanAD(d);renderAdmin()}).catch(function(){$('#amsg').textContent='Could not reach the server.'});
+  };
+  if($('#aDemo'))$('#aDemo').onclick=function(){AD=cleanAD(demoData());renderAdmin()};
+}
+function svgDots(R){
+  var pr=R.main.overall.pairs;if(!pr||!pr.a.length)return '';
+  var rows=pr.a.map(function(a,i){return{c:a,q:pr.b[i],i:i}}).sort(function(x,y){return (x.c-x.q)-(y.c-y.q)});
+  var all=[];rows.forEach(function(r){all.push(r.c,r.q)});var lo=Math.floor(Math.min.apply(null,all)/5)*5-5,hi=Math.ceil(Math.max.apply(null,all)/5)*5+5;
+  var W=760,H=rows.length*22+46,L=60,Rr=20,x=function(v){return L+(v-lo)/(hi-lo)*(W-L-Rr)};
+  var s='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Each teacher: mean score for Claude and for Qwen">';
+  for(var g=lo;g<=hi;g+=5){s+='<line x1="'+x(g)+'" x2="'+x(g)+'" y1="10" y2="'+(H-30)+'" stroke="var(--grid)"/><text x="'+x(g)+'" y="'+(H-12)+'" text-anchor="middle">'+g+'</text>'}
+  rows.forEach(function(r,k){var y=22+k*22;s+='<text x="4" y="'+(y+4)+'">T'+(r.i+1)+'</text><line x1="'+x(r.c)+'" x2="'+x(r.q)+'" y1="'+y+'" y2="'+y+'" stroke="var(--muted)" stroke-width="2"/>'+
+   '<circle cx="'+x(r.c)+'" cy="'+y+'" r="5" fill="var(--s1)" stroke="var(--surface)" stroke-width="2"><title>Teacher '+(r.i+1)+' · Claude '+r.c.toFixed(1)+'</title></circle>'+
+   '<circle cx="'+x(r.q)+'" cy="'+y+'" r="5" fill="var(--s2)" stroke="var(--surface)" stroke-width="2"><title>Teacher '+(r.i+1)+' · Qwen '+r.q.toFixed(1)+'</title></circle>'});
+  return s+'</svg>';
+}
+function svgCrit(R){
+  var rows=R.crit,W=760,L=170,Rr=50,H=rows.length*46+30,x=function(v){return L+v/100*(W-L-Rr)};
+  var s='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Mean criterion scores by model">';
+  [0,25,50,75,100].forEach(function(g){s+='<line x1="'+x(g)+'" x2="'+x(g)+'" y1="4" y2="'+(H-22)+'" stroke="var(--grid)"/><text x="'+x(g)+'" y="'+(H-6)+'" text-anchor="middle">'+g+'</text>'});
+  rows.forEach(function(c,k){var y=10+k*46,a=(c.m1-1)/3*100,b=(c.m2-1)/3*100;
+   s+='<text x="'+(L-10)+'" y="'+(y+22)+'" text-anchor="end" style="fill:var(--ink)">'+esc(c.label)+'</text>';
+   [[a,'var(--s1)','Claude',0],[b,'var(--s2)','Qwen',1]].forEach(function(z){if(!isFinite(z[0]))return;var yy=y+z[3]*14;
+    s+='<rect x="'+x(0)+'" y="'+yy+'" width="'+Math.max(2,x(z[0])-x(0))+'" height="10" rx="3" fill="'+z[1]+'"><title>'+z[2]+' · '+esc(c.label)+': '+z[0].toFixed(0)+' / 100</title></rect><text x="'+(x(z[0])+6)+'" y="'+(yy+9)+'">'+z[0].toFixed(0)+'</text>'})});
+  return s+'</svg>';
+}
+function testRow(label,t,extra){
+  if(!t||t.n<2)return '<tr><td>'+esc(label)+'</td><td colspan="8" class="muted">Not enough complete data yet (n='+(t?t.n:0)+')</td></tr>';
+  var sig=(extra&&extra.holm!=null?extra.holm:t.p)<.05;
+  return '<tr><td>'+esc(label)+'</td><td class="n">'+t.n+'</td><td class="n">'+fmt(t.m1)+'</td><td class="n">'+fmt(t.m2)+'</td><td class="n">'+(t.diff>0?'+':'')+fmt(t.diff)+' <span class="small muted">['+fmt(t.ci[0])+', '+fmt(t.ci[1])+']</span></td>'+
+   '<td class="n">'+fp(t.p)+'</td><td class="n">'+fp(t.wp)+'</td><td class="n '+(sig?'sig':'nonsig')+'">'+(extra&&extra.holm!=null?fp(extra.holm):'–')+'</td><td class="n">'+fmt(t.dz,2)+' <span class="small muted">'+dzLabel(t.dz)+'</span></td></tr>';
+}
+var TH='<tr><th>Comparison</th><th class="n">n</th><th class="n">Claude</th><th class="n">Qwen</th><th class="n">Claude − Qwen [95% CI]</th><th class="n">p (paired t)</th><th class="n">p (Wilcoxon)</th><th class="n">p Holm-adj.</th><th class="n">Effect dz</th></tr>';
+function verdictBox(R){
+  var o=R.main.overall,n=o.n;
+  if(!n||n<3)return '<div class="verdict none"><h2 style="margin-top:0">Waiting for data</h2><p>At least 3 teachers who have rated all four sets are needed before any comparison is meaningful. Currently: '+n+'.</p></div>';
+  var win=o.diff>0?'Claude':'Qwen',lose=o.diff>0?'Qwen':'Claude',ciExcl=(o.ci[0]>0||o.ci[1]<0),both=o.p<.05&&o.wp<.05;
+  var topicsAgree=Object.keys(QDATA.topics).every(function(t){var m=R.main[t];return m&&m.n>1&&Math.sign(m.diff)===Math.sign(o.diff)});
+  var h='<div class="verdict '+(ciExcl&&both?'win':'none')+'">';
+  if(ciExcl&&both){h+='<h2 style="margin-top:0">'+win+' scored higher</h2><p><b>'+win+'</b> questions were rated higher than '+lose+' by <b>'+fmt(Math.abs(o.diff))+' points</b> out of 100 (95% CI '+fmt(Math.min(Math.abs(o.ci[0]),Math.abs(o.ci[1])))+' to '+fmt(Math.max(Math.abs(o.ci[0]),Math.abs(o.ci[1])))+'; paired t-test p '+(o.p<.001?'< 0.001':'= '+fp(o.p))+', Wilcoxon p '+(o.wp<.001?'< 0.001':'= '+fp(o.wp))+'). The effect size is <b>'+dzLabel(o.dz)+'</b> (dz = '+fmt(Math.abs(o.dz),2)+'). '+o.pos+' of '+n+' teachers rated Claude higher overall.</p>'}
+  else{h+='<h2 style="margin-top:0">No reliable overall difference yet</h2><p>Claude averaged '+fmt(o.m1)+' and Qwen '+fmt(o.m2)+' (difference '+(o.diff>0?'+':'')+fmt(o.diff)+', 95% CI '+fmt(o.ci[0])+' to '+fmt(o.ci[1])+'; paired t p = '+fp(o.p)+', Wilcoxon p = '+fp(o.wp)+'). The data do not separate the two models with confidence'+(n<12?', and with only '+n+' teachers the test has little power to detect a modest gap':'')+'.</p>'}
+  h+='<p class="small muted">'+(topicsAgree?'The direction is the same in both topics. ':'The direction is <b>not</b> the same in both topics, so read the topic rows below. ')+'Teachers are the unit of analysis (each rated both models), so teacher leniency cancels out. Tests use the mean of each teacher\'s question scores.</p>';
+  if(n<12)h+='<p class="small" style="color:var(--warn)"><b>Small sample:</b> lead with the effect sizes and intervals, not the p-values.</p>';
+  return h+'</div>';
+}
+function renderAdmin(){
+  var y=window.scrollY,Q=teacherQuality(AD),D=filterD(AD),R=analyse(D),app=$('#app');
+  var pm=R.pool,h='<h1>Admin dashboard'+(D.demo?' <span class="pill" style="background:var(--warn-soft);color:var(--warn)">DEMO DATA</span>':'')+'</h1>';
+  h+='<div class="kpis"><div class="kpi"><div class="v">'+AD.teachers.length+'</div><div class="l">Teachers registered</div></div><div class="kpi"><div class="v">'+Q.filter(function(x){return x.complete}).length+'</div><div class="l">Finished all 72 + set ratings</div></div><div class="kpi"><div class="v">'+R.teachers.eligible+'</div><div class="l">Used in the main test</div></div><div class="kpi"><div class="v">'+Object.keys(EXCL).filter(function(k){return EXCL[k]}).length+'</div><div class="l">Excluded by you</div></div><div class="kpi"><div class="v">'+D.responses.length+'</div><div class="l">Question ratings in use</div></div></div>';
+  h+=verdictBox(R);
+  h+='<div class="card"><h2 style="margin-top:0">Overall score per teacher</h2><p class="small muted">Weighted question score (0 to 100), averaged over each teacher\'s ratings. Each row is one teacher; a short line means they saw little difference.</p><div class="legend"><span><i style="background:var(--s1)"></i>Claude</span><span><i style="background:var(--s2)"></i>Qwen</span></div>'+svgDots(R)+'</div>';
+  h+='<div class="card scroll"><h2 style="margin-top:0">Main comparison (question score, 0 to 100)</h2><table>'+TH+testRow('Both topics',R.main.overall)+Object.keys(QDATA.topics).map(function(t){return testRow(QDATA.topics[t].name,R.main[t],{holm:R.main[t].holm})}).join('')+'</table>'+
+   '<p class="small muted">The first row is the single pre-planned primary test. Topic rows are Holm-adjusted together. dz is the paired effect size (|0.2| small, |0.5| medium, |0.8| large). Bootstrap 95% CI for overall dz: '+(R.main.overall.dzci?fmt(R.main.overall.dzci[0],2)+' to '+fmt(R.main.overall.dzci[1],2):'–')+'.</p>';
+  h+='<table style="margin-top:8px">'+TH.replace('Comparison','By question type')+R.kind.map(function(k){return testRow(k.label,k,{holm:k.holm})}).join('')+'</table></div>';
+  h+='<div class="card"><h2 style="margin-top:0">By criterion</h2><div class="legend"><span><i style="background:var(--s1)"></i>Claude</span><span><i style="background:var(--s2)"></i>Qwen</span></div>'+svgCrit(R)+'<div class="scroll"><table style="margin-top:10px">'+TH.replace('Comparison','Criterion (1-4 scale)')+R.crit.map(function(c){return testRow(c.label,c,{holm:c.holm})}).join('')+'</table></div><p class="small muted">Bars rescale each 1-4 criterion to 0-100. Table shows raw 1-4 means. Holm adjustment covers the 7 criteria.</p></div>';
+  // usability
+  h+='<div class="card scroll"><h2 style="margin-top:0">Usability and failures</h2><table><tr><th>Model</th><th class="n">Ratings</th><th class="n">Usable (as is + minor edit)</th><th class="n">Hard-fail (wrong accuracy or Reject)</th><th class="n">Rated too easy</th><th class="n">Rated too hard</th><th>Verdicts (as is / minor / major / reject)</th></tr>'+
+   MODELS.map(function(m){var p=pm[m];return '<tr><td><b>'+MNAME[m]+'</b></td><td class="n">'+p.n+'</td><td class="n">'+pct(p.us/p.n)+' <span class="small muted">['+pct(p.usci[0])+', '+pct(p.usci[1])+']</span></td><td class="n">'+pct(p.hf/p.n,1)+' <span class="small muted">['+pct(p.hfci[0],1)+', '+pct(p.hfci[1],1)+']</span></td><td class="n">'+pct(p.te/p.n)+'</td><td class="n">'+pct(p.th/p.n)+'</td><td>'+['asis','minor','major','reject'].map(function(v){return p.vc[v]||0}).join(' / ')+'</td></tr>'}).join('')+'</table>'+
+   '<table style="margin-top:8px">'+TH.replace('Comparison','Per-teacher rate')+testRow('Usable rate (0-1)',R.rates.usable)+testRow('Hard-fail rate (0-1)',R.rates.hardFail)+'</table><p class="small muted">Wilson 95% intervals treat ratings as independent, which they are not, so use them descriptively. The per-teacher rows are the proper paired comparison (means shown as proportions).</p></div>';
+  // set level + preference
+  h+='<div class="card scroll"><h2 style="margin-top:0">Whole-set ratings and preference</h2><table>'+TH.replace('Comparison','Set-level criterion (1-4)')+R.setl.map(function(c){return testRow(c.label,c,{holm:c.holm})}).join('')+'</table>'+
+   '<table style="margin-top:12px"><tr><th>Forced preference</th><th class="n">Claude</th><th class="n">Qwen</th><th class="n">Exact sign-test p</th></tr>'+Object.keys(R.pref).map(function(t){var p=R.pref[t];return '<tr><td>'+(t==='all'?'Both topics (pooled, descriptive)':esc(QDATA.topics[t].name))+'</td><td class="n">'+p.claude+'</td><td class="n">'+p.qwen+'</td><td class="n">'+fp(p.p)+'</td></tr>'}).join('')+'</table>'+
+   '<table style="margin-top:12px"><tr><th>Would use this set?</th><th class="n">Yes</th><th class="n">With edits</th><th class="n">No</th></tr>'+MODELS.map(function(m){var w=R.wouldUse[m];return '<tr><td>'+MNAME[m]+'</td><td class="n">'+w.yes+'</td><td class="n">'+w.edits+'</td><td class="n">'+w.no+'</td></tr>'}).join('')+'</table></div>';
+  // reliability
+  var al=function(a){return !isFinite(a)?'–':fmt(a,2)+' <span class="small muted">'+(a>=.8?'good':a>=.667?'tentative':'low')+'</span>'};
+  h+='<div class="card"><h2 style="margin-top:0">Can we trust the ratings?</h2><table><tr><th>Check</th><th class="n">Claude</th><th class="n">Qwen</th><th class="n">All</th></tr>'+
+   '<tr><td>Teacher agreement on question scores (Krippendorff\'s alpha)</td><td class="n">'+al(R.rel.claude)+'</td><td class="n">'+al(R.rel.qwen)+'</td><td class="n">'+al(R.rel.all)+'</td></tr>'+
+   '<tr><td>Claimed vs perceived thinking level (weighted kappa)</td><td class="n">'+al(R.kappa.claude.k)+'</td><td class="n">'+al(R.kappa.qwen.k)+'</td><td class="n">–</td></tr>'+
+   '<tr><td>Teachers saw the same level as claimed (exact / within one)</td><td class="n">'+pct(R.kappa.claude.exact)+' / '+pct(R.kappa.claude.within1)+'</td><td class="n">'+pct(R.kappa.qwen.exact)+' / '+pct(R.kappa.qwen.within1)+'</td><td class="n">–</td></tr></table>'+
+   '<p class="small muted">Alpha below 0.667 means teachers disagree a lot; then a "winner" rests mostly on teacher differences and should be read with care. Item-level check (Welch, question means): '+Object.keys(R.itemTest).map(function(t){var x=R.itemTest[t];return esc(QDATA.topics[t].name)+' diff '+(x.diff>0?'+':'')+fmt(x.diff)+' (p '+fp(x.p)+')'}).join('; ')+'.</p></div>';
+  // item table
+  var codes=Object.keys(D.setMap);
+  h+='<div class="card"><h2 style="margin-top:0">Question by question</h2><select id="itemSel">'+codes.map(function(c){return '<option value="'+c+'">'+MNAME[D.setMap[c].model]+' · '+esc(QDATA.topics[D.setMap[c].topic].name)+'</option>'}).join('')+'</select><div class="scroll" id="itemTbl"></div></div>';
+  // subgroups
+  h+='<div class="card"><h2 style="margin-top:0">Exploratory: does the gap differ by teacher group?</h2><p class="small muted">Mean (Claude − Qwen) score gap among teachers in the main test. Groups are small; treat as hints only.</p><div class="scroll"><table><tr><th>Group</th><th>Level</th><th class="n">Teachers</th><th class="n">Mean gap</th></tr>'+
+   Object.keys(R.sub).map(function(k){return R.sub[k].rows.map(function(r,i){return '<tr><td>'+(i===0?esc(R.sub[k].label):'')+'</td><td>'+esc(r.k)+'</td><td class="n">'+r.n+'</td><td class="n">'+(r.diff>0?'+':'')+fmt(r.diff)+'</td></tr>'}).join('')}).join('')+'</table></div></div>';
+  h+='<div class="card scroll"><h2 style="margin-top:0">Teachers and data quality</h2><p class="small muted">Tick a teacher to leave them out of every number above. Flags are prompts to look, not proof of careless rating.</p><table><tr><th>Exclude</th><th>Teacher</th><th>School / area</th><th class="n">Rated</th><th class="n">Median s</th><th>Notes</th></tr>'+
+   Q.map(function(x,i){var flagged=x.flags.length>0;return '<tr'+(flagged?' style="background:var(--warn-soft)"':'')+'><td><input type="checkbox" class="exb" data-tid="'+esc(x.t.tid)+'"'+(EXCL[x.t.tid]?' checked':'')+' aria-label="Exclude"></td><td>'+esc(x.t.name)+'</td><td>'+esc(x.t.school)+' / '+esc(x.t.area)+'</td><td class="n">'+x.n+'/'+x.total+'</td><td class="n">'+(x.med==null?'–':Math.round(x.med))+'</td><td class="small">'+esc(x.flags.concat(x.soft).join('; '))+'</td></tr>'}).join('')+
+   '</table><button class="btn sec" id="exFlag" style="margin-top:10px">Exclude all flagged</button></div>';
+  h+='<div class="card"><h2 style="margin-top:0">Export</h2><p class="small muted">For the mixed-effects model (score ~ model + topic + type, random effects for teacher and question), download the CSV and run <code>analysis.py</code>.</p><button class="btn" id="csvBtn" style="flex:0 0 auto">Download responses CSV</button></div>';
+  app.innerHTML=h;
+  Array.prototype.forEach.call(document.querySelectorAll('.exb'),function(cb){cb.onchange=function(){EXCL[cb.dataset.tid]=cb.checked;renderAdmin()}});
+  if($('#exFlag'))$('#exFlag').onclick=function(){Q.forEach(function(x){if(x.flags.length)EXCL[x.t.tid]=true});renderAdmin()};
+  var fill=function(){var c=$('#itemSel').value,rows=R.items[c]||[];
+   $('#itemTbl').innerHTML='<table style="margin-top:10px"><tr><th>Q</th><th>Question (lowest score first)</th><th class="n">Score</th><th class="n">Accuracy</th><th class="n">Hard fails</th><th class="n">Usable</th><th class="n">Claimed lvl</th><th class="n">Seen lvl</th><th class="n">Difficulty</th></tr>'+
+    rows.map(function(x){var flag=x.acc<3||x.hf>0;return '<tr'+(flag?' style="background:var(--bad-soft)"':'')+'><td>'+(x.kind==='obj'?'MCQ':'Written')+'</td><td>'+esc(x.stem.length>130?x.stem.slice(0,130)+'…':x.stem)+'</td><td class="n">'+fmt(x.score)+'</td><td class="n">'+fmt(x.acc,2)+'</td><td class="n">'+x.hf+'/'+x.n+'</td><td class="n">'+pct(x.usable)+'</td><td class="n">'+x.level+'</td><td class="n">'+fmt(x.perc,1)+'</td><td class="n">'+(x.dir>.4?'harder':x.dir<-.4?'easier':'right')+'</td></tr>'}).join('')+'</table><p class="small muted">Red rows: mean accuracy below 3, or at least one hard fail.</p>'};
+  $('#itemSel').onchange=fill;fill();
+  $('#csvBtn').onclick=function(){var cols=Object.keys(AD.responses[0]||{});var csv=[cols.join(',')].concat(AD.responses.map(function(r){return cols.map(function(c){var v=r[c]==null?'':r[c];v=(typeof v==='string'&&/^[=+@\-]/.test(v))?"'"+v:v;return '"'+String(v).replace(/"/g,'""')+'"'}).join(',')})).join('\n');
+   var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='responses.csv';a.click()};
+  window.__R=R;window.scrollTo(0,y);
+}
+</script>
+</body></html>
